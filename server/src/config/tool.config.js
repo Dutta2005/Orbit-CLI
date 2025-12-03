@@ -1,10 +1,7 @@
 import { google } from '@ai-sdk/google';
 import chalk from 'chalk';
 
-/**
- * Available Google Generative AI tools configuration
- * Note: Tools are instantiated lazily to avoid initialization errors
- */
+
 export const availableTools = [
   {
     id: 'google_search',
@@ -29,16 +26,13 @@ export const availableTools = [
   },
 ];
 
-/**
- * Get enabled tools as a tools object for AI SDK
- */
+
 export function getEnabledTools() {
   const tools = {};
   
   try {
     for (const toolConfig of availableTools) {
       if (toolConfig.enabled) {
-        // Instantiate the tool when needed
         tools[toolConfig.id] = toolConfig.getTool();
       }
     }
@@ -59,9 +53,7 @@ export function getEnabledTools() {
   }
 }
 
-/**
- * Toggle a tool's enabled state
- */
+
 export function toggleTool(toolId) {
   const tool = availableTools.find(t => t.id === toolId);
   if (tool) {
@@ -73,9 +65,6 @@ export function toggleTool(toolId) {
   return false;
 }
 
-/**
- * Enable specific tools
- */
 export function enableTools(toolIds) {
   console.log(chalk.gray('[DEBUG] enableTools called with:'), toolIds);
   
@@ -92,18 +81,14 @@ export function enableTools(toolIds) {
   console.log(chalk.gray(`[DEBUG] Total tools enabled: ${enabledCount}/${availableTools.length}`));
 }
 
-/**
- * Get all enabled tool names
- */
+
 export function getEnabledToolNames() {
   const names = availableTools.filter(t => t.enabled).map(t => t.name);
   console.log(chalk.gray('[DEBUG] getEnabledToolNames returning:'), names);
   return names;
 }
 
-/**
- * Reset all tools (disable all)
- */
+
 export function resetTools() {
   availableTools.forEach(tool => {
     tool.enabled = false;

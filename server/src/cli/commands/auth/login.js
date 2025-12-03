@@ -20,9 +20,6 @@ const CLIENT_ID = process.env.GITHUB_CLIENT_ID;
 const CONFIG_DIR = path.join(os.homedir(), ".better-auth");
 const TOKEN_FILE = path.join(CONFIG_DIR, "token.json");
 
-// ============================================
-// TOKEN MANAGEMENT (Export these for use in other commands)
-// ============================================
 
 export async function getStoredToken() {
   try {
@@ -65,7 +62,6 @@ export async function clearStoredToken() {
     await fs.unlink(TOKEN_FILE);
     return true;
   } catch (error) {
-    // File doesn't exist or can't be deleted
     return false;
   }
 }
@@ -79,7 +75,6 @@ export async function isTokenExpired() {
   const expiresAt = new Date(token.expires_at);
   const now = new Date();
 
-  // Consider expired if less than 5 minutes remaining
   return expiresAt.getTime() - now.getTime() < 5 * 60 * 1000;
 }
 
@@ -103,10 +98,6 @@ export async function requireAuth() {
 
   return token;
 }
-
-// ============================================
-// LOGIN COMMAND
-// ============================================
 
 export async function loginAction(opts) {
   const options = z
@@ -145,7 +136,6 @@ export async function loginAction(opts) {
     }
   }
 
-  // Create the auth client
   const authClient = createAuthClient({
     baseURL: serverUrl,
     plugins: [deviceAuthorizationClient()],
@@ -191,7 +181,6 @@ export async function loginAction(opts) {
       expires_in,
     } = data;
 
-    // Display authorization instructions
     console.log("");
     console.log(chalk.cyan("📱 Device Authorization Required"));
     console.log("");
@@ -203,7 +192,6 @@ export async function loginAction(opts) {
     console.log(`Enter code: ${chalk.bold.green(user_code)}`);
     console.log("");
 
-    // Ask if user wants to open browser
     const shouldOpen = await confirm({
       message: "Open browser automatically?",
       initialValue: true,
@@ -341,9 +329,6 @@ async function pollForToken(authClient, deviceCode, clientId, initialInterval) {
   });
 }
 
-// ============================================
-// LOGOUT COMMAND
-// ============================================
 
 export async function logoutAction() {
   intro(chalk.bold("👋 Logout"));
@@ -374,9 +359,6 @@ export async function logoutAction() {
   }
 }
 
-// ============================================
-// WHOAMI COMMAND
-// ============================================
 
 export async function whoamiAction(opts) {
   const token = await requireAuth();
@@ -408,10 +390,6 @@ export async function whoamiAction(opts) {
 👤 ID: ${user.id}`)
   );
 }
-
-// ============================================
-// COMMANDER SETUP
-// ============================================
 
 export const login = new Command("login")
   .description("Login to Better Auth")

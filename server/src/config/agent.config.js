@@ -4,9 +4,7 @@ import chalk from 'chalk';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 
-/**
- * Zod schema for structured application generation
- */
+
 const ApplicationSchema = z.object({
   folderName: z.string().describe('Kebab-case folder name for the application'),
   description: z.string().describe('Brief description of what was created'),
@@ -19,16 +17,12 @@ const ApplicationSchema = z.object({
   setupCommands: z.array(z.string()).describe('Bash commands to setup and run (e.g., npm install, npm run dev)'),
 });
 
-/**
- * Console logging helpers
- */
+
 function printSystem(message) {
   console.log(message);
 }
 
-/**
- * Display file tree structure
- */
+
 function displayFileTree(files, folderName) {
   printSystem(chalk.cyan('\n📂 Project Structure:'));
   printSystem(chalk.white(`${folderName}/`));
@@ -58,9 +52,7 @@ function displayFileTree(files, folderName) {
   });
 }
 
-/**
- * Create application files
- */
+
 async function createApplicationFiles(baseDir, folderName, files) {
   const appDir = path.join(baseDir, folderName);
   
@@ -79,9 +71,7 @@ async function createApplicationFiles(baseDir, folderName, files) {
   return appDir;
 }
 
-/**
- * Generate application using structured output
- */
+
 export async function generateApplication(description, aiService, cwd = process.cwd()) {
   try {
     printSystem(chalk.cyan('\n🤖 Agent Mode: Generating your application...\n'));

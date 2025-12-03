@@ -16,7 +16,6 @@ import {
   resetTools 
 } from "../../config/tool.config.js";
 
-// Configure marked for terminal
 marked.use(
   markedTerminal({
     code: chalk.cyan,
@@ -197,7 +196,6 @@ async function getAIResponse(conversationId) {
   const toolCallsDetected = [];
   
   try {
-    // IMPORTANT: Pass tools in the streamText config
     const result = await aiService.sendMessage(
       aiMessages, 
       (chunk) => {
@@ -217,7 +215,6 @@ async function getAIResponse(conversationId) {
       }
     );
     
-    // Display tool calls if any
     if (toolCallsDetected.length > 0) {
       console.log("\n");
       const toolCallBox = boxen(
@@ -235,7 +232,6 @@ async function getAIResponse(conversationId) {
       console.log(toolCallBox);
     }
 
-    // Display tool results if any
     if (result.toolResults && result.toolResults.length > 0) {
       const toolResultBox = boxen(
         result.toolResults.map(tr => 
@@ -252,7 +248,6 @@ async function getAIResponse(conversationId) {
       console.log(toolResultBox);
     }
     
-    // Render markdown response
     console.log("\n");
     const renderedMarkdown = marked.parse(fullResponse);
     console.log(renderedMarkdown);
@@ -352,13 +347,11 @@ export async function startToolChat(conversationId = null) {
 
     const user = await getUserFromToken();
     
-    // Select tools
     await selectTools();
     
     const conversation = await initConversation(user.id, conversationId, "tool");
     await chatLoop(conversation);
     
-    // Reset tools on exit
     resetTools();
     
     outro(chalk.green("✨ Thanks for using tools!"));

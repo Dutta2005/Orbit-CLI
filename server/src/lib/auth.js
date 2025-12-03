@@ -12,7 +12,6 @@ export const auth = betterAuth({
   trustedOrigins: ["http://localhost:3000"],
   plugins: [
     deviceAuthorization({
-      // Optional configuration
       expiresIn: "30m", // Device code expiration time
       interval: "5s", // Minimum polling interval
       
