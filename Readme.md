@@ -4,7 +4,7 @@ Orbilt-CLI is a powerful command-line AI agent that brings advanced AI capabilit
 
 ## 🚀 Live Demo
 
-![Video](./screenshot/video.mp4)
+[Live Demo](https://www.linkedin.com/posts/rajdutta062005_ai-developertools-geminiai-activity-7402333849072021504-dfz7?utm_source=share&utm_medium=member_desktop&rcm=ACoAAEaqAiMBPx_ifcHeQxodAB3U4BmyCteEqgk)
 
 ## 🧪 Features
 
@@ -114,3 +114,7 @@ We welcome all contributions! Follow these steps to contribute:
 - 🌐 Multi-model support (OpenAI, Anthropic etc.)
 - 🗣️ Voice command integration
 - 📊 Advanced analytics and usage insights
+
+<p align="center">
+  ⭐ Star this repo if you find it useful!
+</p>
