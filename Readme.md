@@ -28,7 +28,7 @@ Orbilt-CLI is a powerful command-line AI agent that brings advanced AI capabilit
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/orbilt-cli.git
+   git clone https://github.com/Dutta2005/orbilt-cli.git
    ```
 2. Install frontend dependencies and start the Next.js app:
    ```bash
@@ -44,7 +44,7 @@ Orbilt-CLI is a powerful command-line AI agent that brings advanced AI capabilit
    ```
 4. Make the CLI executable and link it:
    ```bash
-   chmod +x src/cli/main.js
+   chmod +x server/src/cli/main.js
    npm link
    ```
 5. Authenticate via the CLI:
