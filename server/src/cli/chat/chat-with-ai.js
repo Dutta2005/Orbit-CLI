@@ -9,10 +9,8 @@ import { ChatService } from "../../services/chat.services.js";
 import { getStoredToken } from "../commands/auth/login.js";
 import prisma from "../../lib/db.js";
 
-// Configure marked to use terminal renderer
 marked.use(
   markedTerminal({
-    // Styling options for terminal output
     code: chalk.cyan,
     blockquote: chalk.gray.italic,
     heading: chalk.green.bold,
@@ -30,7 +28,6 @@ marked.use(
   })
 );
 
-// Initialize services
 const aiService = new AIService();
 const chatService = new ChatService();
 
@@ -70,8 +67,7 @@ async function initConversation(userId, conversationId = null, mode = "chat") {
   );
   
   spinner.success("Conversation loaded");
-  
-  // Display conversation info in a box
+
   const conversationInfo = boxen(
     `${chalk.bold("Conversation")}: ${conversation.title}\n${chalk.gray("ID: " + conversation.id)}\n${chalk.gray("Mode: " + conversation.mode)}`,
     {
@@ -85,8 +81,7 @@ async function initConversation(userId, conversationId = null, mode = "chat") {
   );
   
   console.log(conversationInfo);
-  
-  // Display existing messages if any
+
   if (conversation.messages?.length > 0) {
     console.log(chalk.yellow("📜 Previous messages:\n"));
     displayMessages(conversation.messages);
@@ -108,7 +103,6 @@ function displayMessages(messages) {
       });
       console.log(userBox);
     } else {
-      // Render markdown for assistant messages
       const renderedContent = marked.parse(msg.content);
       const assistantBox = boxen(renderedContent.trim(), {
         padding: 1,
@@ -141,7 +135,6 @@ async function getAIResponse(conversationId) {
   
   try {
     const result = await aiService.sendMessage(aiMessages, (chunk) => {
-      // Stop spinner on first chunk and show header
       if (isFirstChunk) {
         spinner.stop();
         console.log("\n");
@@ -153,7 +146,6 @@ async function getAIResponse(conversationId) {
       fullResponse += chunk;
     });
     
-    // Now render the complete markdown response
     console.log("\n");
     const renderedMarkdown = marked.parse(fullResponse);
     console.log(renderedMarkdown);
@@ -199,7 +191,6 @@ async function chatLoop(conversation) {
       },
     });
 
-    // Handle cancellation (Ctrl+C)
     if (isCancel(userInput)) {
       const exitBox = boxen(chalk.yellow("Chat session ended. Goodbye! 👋"), {
         padding: 1,
@@ -211,7 +202,6 @@ async function chatLoop(conversation) {
       process.exit(0);
     }
 
-    // Handle exit command
     if (userInput.toLowerCase() === "exit") {
       const exitBox = boxen(chalk.yellow("Chat session ended. Goodbye! 👋"), {
         padding: 1,
@@ -223,30 +213,16 @@ async function chatLoop(conversation) {
       break;
     }
 
-  
-  
-
-    // Save user message
     await saveMessage(conversation.id, "user", userInput);
-
-    // Get messages count before AI response
     const messages = await chatService.getMessages(conversation.id);
-    
-    // Get AI response with streaming and markdown rendering
     const aiResponse = await getAIResponse(conversation.id);
-
-    // Save AI response
     await saveMessage(conversation.id, "assistant", aiResponse);
-
-    // Update title if first exchange
     await updateConversationTitle(conversation.id, userInput, messages.length);
   }
 }
 
-// Main entry point
 export async function startChat(mode = "chat", conversationId = null) {
   try {
-    // Display intro banner
     intro(
       boxen(chalk.bold.cyan("🚀 Orbit AI Chat"), {
         padding: 1,
@@ -259,7 +235,6 @@ export async function startChat(mode = "chat", conversationId = null) {
     const conversation = await initConversation(user.id, conversationId, mode);
     await chatLoop(conversation);
     
-    // Display outro
     outro(chalk.green("✨ Thanks for chatting!"));
   } catch (error) {
     const errorBox = boxen(chalk.red(`❌ Error: ${error.message}`), {

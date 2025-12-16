@@ -27,20 +27,17 @@ export async function getStoredToken() {
     const token = JSON.parse(data);
     return token;
   } catch (error) {
-    // File doesn't exist or can't be read
     return null;
   }
 }
 
 export async function storeToken(token) {
   try {
-    // Ensure config directory exists
     await fs.mkdir(CONFIG_DIR, { recursive: true });
 
-    // Store token with metadata
     const tokenData = {
       access_token: token.access_token,
-      refresh_token: token.refresh_token, // Store if available
+      refresh_token: token.refresh_token,
       token_type: token.token_type || "Bearer",
       scope: token.scope,
       expires_at: token.expires_in
@@ -120,7 +117,6 @@ export async function loginAction(opts) {
     process.exit(1);
   }
 
-  // Check if already logged in
   const existingToken = await getStoredToken();
   const expired = await isTokenExpired();
 
@@ -145,7 +141,6 @@ export async function loginAction(opts) {
   spinner.start();
 
   try {
-    // Request device code
     const { data, error } = await authClient.device.code({
       client_id: clientId,
       scope: "openid profile email",
@@ -202,7 +197,6 @@ export async function loginAction(opts) {
       await open(urlToOpen);
     }
 
-    // Start polling
     console.log(
       chalk.gray(
         `Waiting for authorization (expires in ${Math.floor(
@@ -219,7 +213,6 @@ export async function loginAction(opts) {
     );
 
     if (token) {
-      // Store the token
       const saved = await storeToken(token);
 
       if (!saved) {
@@ -231,7 +224,6 @@ export async function loginAction(opts) {
         );
       }
 
-      // Get user info
       const { data: session } = await authClient.getSession({
         fetchOptions: {
           headers: {
@@ -295,7 +287,6 @@ async function pollForToken(authClient, deviceCode, clientId, initialInterval) {
         } else if (error) {
           switch (error.error) {
             case "authorization_pending":
-              // Continue polling
               break;
             case "slow_down":
               pollingInterval += 5;
@@ -383,7 +374,6 @@ export async function whoamiAction(opts) {
     },
   });
 
-  // Output user session info
   console.log(
     chalk.bold.greenBright(`\n👤 User: ${user.name}
 📧 Email: ${user.email}

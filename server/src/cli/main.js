@@ -13,7 +13,6 @@ import { wakeUp } from "./commands/ai/wakeUp.js";
 dotenv.config();
 
 async function main() {
-  // Display banner
   console.log(
     chalk.cyan(
       figlet.textSync("Orbit CLI", {
@@ -30,18 +29,14 @@ async function main() {
     .version("0.0.1")
     .description("Orbit CLI - Device Flow Authentication");
 
-  // Add commands
   program.addCommand(wakeUp);
   program.addCommand(login);
   program.addCommand(logout);
   program.addCommand(whoami);
 
-  // Default action shows help
   program.action(() => {
     program.help();
   });
-
-
 
   program.parse();
 }

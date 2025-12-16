@@ -82,7 +82,6 @@ async function selectTools() {
     process.exit(0);
   }
 
-  // Enable selected tools
   enableTools(selectedTools);
 
   if (selectedTools.length === 0) {
@@ -119,13 +118,11 @@ async function initConversation(userId, conversationId = null, mode = "tool") {
   
   spinner.success("Conversation loaded");
   
-  // Get enabled tool names for display
   const enabledToolNames = getEnabledToolNames();
   const toolsDisplay = enabledToolNames.length > 0 
     ? `\n${chalk.gray("Active Tools:")} ${enabledToolNames.join(", ")}`
     : `\n${chalk.gray("No tools enabled")}`;
-  
-  // Display conversation info in a box
+
   const conversationInfo = boxen(
     `${chalk.bold("Conversation")}: ${conversation.title}\n${chalk.gray("ID: " + conversation.id)}\n${chalk.gray("Mode: " + conversation.mode)}${toolsDisplay}`,
     {
@@ -139,8 +136,7 @@ async function initConversation(userId, conversationId = null, mode = "tool") {
   );
   
   console.log(conversationInfo);
-  
-  // Display existing messages if any
+
   if (conversation.messages?.length > 0) {
     console.log(chalk.yellow("📜 Previous messages:\n"));
     displayMessages(conversation.messages);

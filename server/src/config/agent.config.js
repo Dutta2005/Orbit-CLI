@@ -115,18 +115,14 @@ Provide:
     
     printSystem(chalk.green(`Files: ${application.files.length}\n`));
     
-    // Display file tree
     displayFileTree(application.files, application.folderName);
     
-    // Create application directory and files
     printSystem(chalk.cyan('\n📝 Creating files...\n'));
     const appDir = await createApplicationFiles(cwd, application.folderName, application.files);
     
-    // Display results
     printSystem(chalk.green.bold(`\n✨ Application created successfully!\n`));
     printSystem(chalk.cyan(`📁 Location: ${chalk.bold(appDir)}\n`));
     
-    // Display setup commands
     if (application.setupCommands && application.setupCommands.length > 0) {
       printSystem(chalk.cyan('📋 Next Steps:\n'));
       printSystem(chalk.white('```bash'));
