@@ -76,7 +76,12 @@ NODE_ENV=development
 
 ## 🖼️ Screenshots
 
-![Orbit Dashboard](./screenshot/image.png)
+|                                             |                                             |
+| ------------------------------------------- | ------------------------------------------- |
+| ![Orbit Dashboard](./screenshot/image.png)  | ![Orbit Dashboard](./screenshot/image2.png) |
+| ![Orbit Dashboard](./screenshot/image3.png) | ![Orbit Dashboard](./screenshot/image4.png) |
+
+
 
 ## ⚙️ Usage / How it Works
 
