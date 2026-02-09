@@ -56,7 +56,6 @@ export default function Home() {
           </div>
 
           {/* Sign Out Button */}
-          {/* Sign Out Button */}
           <Button
             onClick={() =>
               authClient.signOut({
