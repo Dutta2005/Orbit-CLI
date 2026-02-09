@@ -3,7 +3,12 @@ const fs = require("fs");
 
 const GITHUB_API = "https://api.github.com";
 const repo = process.env.GITHUB_REPOSITORY;
-const prNumber = process.env.GITHUB_REF.split("/")[2];
+// const prNumber = process.env.GITHUB_REF.split("/")[2];
+const event = JSON.parse(
+  require("fs").readFileSync(process.env.GITHUB_EVENT_PATH, "utf8")
+);
+
+const prNumber = event.pull_request.number;
 const token = process.env.GITHUB_TOKEN;
 
 async function getPRDiff() {
@@ -84,6 +89,7 @@ ${diff}
     {
       headers: {
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
       },
     }
   );
