@@ -1,12 +1,11 @@
 import chalk from "chalk";
 import boxen from "boxen";
-import { text, isCancel, intro, outro } from "@clack/prompts";
+import { text, isCancel, cancel, intro, outro } from "@clack/prompts";
 import yoctoSpinner from "yocto-spinner";
 import { marked } from "marked";
 import { markedTerminal } from "marked-terminal";
 import { AIService } from "../ai/google-service.js";
 import { ChatService } from "../../services/chat.services.js";
-import { AiConfigService } from "../../services/aiConfig.services.js";
 import { getStoredToken } from "../commands/auth/login.js";
 import prisma from "../../lib/db.js";
 
@@ -29,8 +28,8 @@ marked.use(
   })
 );
 
+const aiService = new AIService();
 const chatService = new ChatService();
-const aiConfigService = new AiConfigService();
 
 async function getUserFromToken() {
   const token = await getStoredToken();
@@ -46,9 +45,6 @@ async function getUserFromToken() {
       sessions: {
         some: { token: token.access_token },
       },
-    },
-    include: {
-      aiConfig: true,
     },
   });
 
@@ -125,7 +121,7 @@ async function saveMessage(conversationId, role, content) {
   return await chatService.addMessage(conversationId, role, content);
 }
 
-async function getAIResponse(conversationId, aiService) {
+async function getAIResponse(conversationId) {
   const spinner = yoctoSpinner({ 
     text: "AI is thinking...", 
     color: "cyan" 
@@ -170,7 +166,7 @@ async function updateConversationTitle(conversationId, userInput, messageCount) 
   }
 }
 
-async function chatLoop(conversation, aiService) {
+async function chatLoop(conversation) {
   const helpBox = boxen(
     `${chalk.gray('• Type your message and press Enter')}\n${chalk.gray('• Markdown formatting is supported in responses')}\n${chalk.gray('• Type "exit" to end conversation')}\n${chalk.gray('• Press Ctrl+C to quit anytime')}`,
     {
@@ -219,7 +215,7 @@ async function chatLoop(conversation, aiService) {
 
     await saveMessage(conversation.id, "user", userInput);
     const messages = await chatService.getMessages(conversation.id);
-    const aiResponse = await getAIResponse(conversation.id, aiService);
+    const aiResponse = await getAIResponse(conversation.id);
     await saveMessage(conversation.id, "assistant", aiResponse);
     await updateConversationTitle(conversation.id, userInput, messages.length);
   }
@@ -236,9 +232,8 @@ export async function startChat(mode = "chat", conversationId = null) {
     );
 
     const user = await getUserFromToken();
-    const aiService = new AIService(user.aiConfig);
     const conversation = await initConversation(user.id, conversationId, mode);
-    await chatLoop(conversation, aiService);
+    await chatLoop(conversation);
     
     outro(chalk.green("✨ Thanks for chatting!"));
   } catch (error) {

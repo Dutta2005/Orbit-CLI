@@ -4,15 +4,14 @@ import { config } from "../../config/google.config.js";
 import chalk from "chalk";
 
 export class AIService {
-  constructor(userConfig = null) {
-    const apiKey = userConfig?.apiKey || config.googleApiKey;
-    const modelName = userConfig?.model || config.model;
-
-    if (!apiKey) {
-      throw new Error("GOOGLE_API_KEY is not set");
+  constructor() {
+    if (!config.googleApiKey) {
+      throw new Error("GOOGLE_API_KEY is not set in environment variables");
     }
     
-    this.model = google(modelName, { apiKey });
+    this.model = google(config.model, {
+      apiKey: config.googleApiKey,
+    });
   }
 
   async sendMessage(messages, onChunk, tools = undefined, onToolCall = null) {
@@ -26,7 +25,7 @@ export class AIService {
 
       if (tools && Object.keys(tools).length > 0) {
         streamConfig.tools = tools;
-        streamConfig.maxSteps = 5;
+        streamConfig.maxSteps = 5; // Allow up to 5 tool call steps
         
         console.log(chalk.gray(`[DEBUG] Tools enabled: ${Object.keys(tools).join(', ')}`));
       }
@@ -35,6 +34,7 @@ export class AIService {
       
       let fullResponse = "";
       
+      // Stream text chunks
       for await (const chunk of result.textStream) {
         fullResponse += chunk;
         if (onChunk) {
@@ -58,6 +58,7 @@ export class AIService {
             }
           }
           
+          // Collect tool results
           if (step.toolResults && step.toolResults.length > 0) {
             toolResults.push(...step.toolResults);
           }
