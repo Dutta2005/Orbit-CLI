@@ -42,7 +42,7 @@ Orbilt-CLI is a powerful command-line AI agent that brings advanced AI capabilit
 
 3. Install backend dependencies:
    ```bash
-   cd ../server
+   cd server
    npm install
    ```
 
@@ -55,7 +55,7 @@ Orbilt-CLI is a powerful command-line AI agent that brings advanced AI capabilit
 5. Set up the database:
    ```bash
    npx prisma generate
-   npx prisma db push
+   npx prisma migrate dev
    ```
 
 6. Start the Express server:
@@ -66,6 +66,7 @@ Orbilt-CLI is a powerful command-line AI agent that brings advanced AI capabilit
 7. Link the CLI globally (in a new terminal):
    ```bash
    cd server
+   chmod +x src/main.js
    npm link
    ```
 
@@ -327,17 +328,16 @@ We welcome all contributions! Follow these steps to contribute:
 
 **Database errors?**
 - Verify DATABASE_URL in .env
-- Run `npx prisma db push` to sync schema
+- Run `npx prisma migrate dev` to sync schema
 
 **CLI command not found?**
 - Run `npm link` in the server directory
 - Check Node.js is installed
 
-See [LOGIN_FIX.md](./LOGIN_FIX.md) for more help.
 
 ## 📝 License
 
-This project is licensed under the ISC License.
+This project is licensed under the [MIT](./LICENSE) License.
 
 ## ⭐ Star History
 
