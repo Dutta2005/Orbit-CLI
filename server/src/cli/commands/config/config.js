@@ -14,6 +14,11 @@ const GEMINI_MODELS = [
   { value: "gemini-2.0-flash-exp", label: "Gemini 2.0 Flash Experimental" },
   { value: "gemini-1.5-pro", label: "Gemini 1.5 Pro" },
   { value: "gemini-1.5-flash", label: "Gemini 1.5 Flash" },
+  { value: "gemini-1.5-pro-002", label: "Gemini 1.5 Pro 002" },
+  { value: "gemini-1.5-flash-002", label: "Gemini 1.5 Flash 002" },
+  { value: "gemini-1.5-flash-8b", label: "Gemini 1.5 Flash 8B" },
+  { value: "gemini-exp-1206", label: "Gemini Experimental 1206" },
+  { value: "gemini-2.0-flash-thinking-exp", label: "Gemini 2.0 Flash Thinking (Experimental)" },
 ];
 
 async function getUserFromToken() {
@@ -52,42 +57,45 @@ const configSetAction = async () => {
     );
 
     const user = await getUserFromToken();
+    let isValid = false;
+    let apiKey, model;
 
-    const apiKey = await text({
-      message: chalk.blue("Enter your Google Gemini API key"),
-      placeholder: "AIza...",
-      validate(value) {
-        if (!value || value.trim().length === 0) {
-          return "API key cannot be empty";
-        }
-        if (!value.startsWith("AIza")) {
-          return "Invalid API key format";
-        }
-      },
-    });
+    while (!isValid) {
+      apiKey = await text({
+        message: chalk.blue("Enter your Google Gemini API key"),
+        placeholder: "AIza...",
+        validate(value) {
+          if (!value || value.trim().length === 0) {
+            return "API key cannot be empty";
+          }
+          if (!value.startsWith("AIza")) {
+            return "Invalid API key format";
+          }
+        },
+      });
 
-    const model = await select({
-      message: chalk.blue("Select Gemini model"),
-      options: GEMINI_MODELS,
-    });
+      model = await select({
+        message: chalk.blue("Select Gemini model"),
+        options: GEMINI_MODELS,
+      });
 
-    const spinner = yoctoSpinner({ text: "Validating API key..." }).start();
+      const spinner = yoctoSpinner({ text: "Validating API key..." }).start();
 
-    const isValid = await aiConfigService.validateApiKey(apiKey, model);
+      isValid = await aiConfigService.validateApiKey(apiKey, model);
 
-    if (!isValid) {
-      spinner.error("Invalid API key or model");
-      console.log(
-        boxen(chalk.red("❌ API key validation failed. Please check your key and try again."), {
-          padding: 1,
-          borderStyle: "round",
-          borderColor: "red",
-        })
-      );
-      return;
+      if (!isValid) {
+        spinner.error("Invalid API key or model");
+        console.log(
+          boxen(chalk.red("❌ API key validation failed. Please try again with valid credentials."), {
+            padding: 1,
+            borderStyle: "round",
+            borderColor: "red",
+          })
+        );
+      } else {
+        spinner.success("API key validated");
+      }
     }
-
-    spinner.success("API key validated");
 
     const confirmSave = await confirm({
       message: chalk.yellow("Save this configuration?"),

@@ -8,7 +8,9 @@
   },
   "scripts": {
     "dev": "nodemon src/index.js",
-    "cli": "node src/cli/main.js"
+    "cli": "node src/cli/main.js",
+    "test": "node tests/env.config.simple.test.js",
+    "check-env": "node scripts/check-env.js"
   },
   "keywords": [],
   "author": "",

@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 
 import dotenv from "dotenv";
+dotenv.config();
 
 import chalk from "chalk";
 import figlet from "figlet";
-
 import { Command } from "commander";
-
+import { validateEnv } from "../config/env.config.js";
 import { login, logout, whoami } from "./commands/auth/login.js";
 import { config } from "./commands/config/config.js";
 import { wakeUp } from "./commands/ai/wakeUp.js";
 
-dotenv.config();
+validateEnv();
 
 async function main() {
   console.log(

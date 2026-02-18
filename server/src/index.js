@@ -2,9 +2,11 @@ import express from "express";
 import { auth } from "./lib/auth.js";
 import { fromNodeHeaders, toNodeHandler } from "better-auth/node";
 import cors from "cors";
+import { validateEnv } from "./config/env.config.js";
 
+const env = validateEnv();
 const app = express();
-const port = 3005;
+const port = parseInt(env.PORT);
 
 app.use(
   cors({
