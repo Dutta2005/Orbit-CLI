@@ -6,8 +6,9 @@ import { ChatService } from "../../services/chat.services.js";
 import { getStoredToken } from "../commands/auth/login.js";
 import prisma from "../../lib/db.js";
 import { generateApplication } from "../../config/agent.config.js";
+import { AiConfigService } from "../../services/aiConfig.services.js";
 
-const aiService = new AIService();
+const aiConfigService = new AiConfigService();
 const chatService = new ChatService();
 
 async function getUserFromToken() {
@@ -22,6 +23,9 @@ async function getUserFromToken() {
       sessions: {
         some: { token: token.access_token },
       },
+    },
+    include: {
+      aiConfig: true,
     },
   });
 
@@ -188,6 +192,7 @@ export async function startAgentChat(conversationId = null) {
     );
 
     const user = await getUserFromToken();
+    const aiService = new AIService(user.aiConfig);
     
     // Warning about file system access
     const shouldContinue = await confirm({
@@ -200,7 +205,7 @@ export async function startAgentChat(conversationId = null) {
       process.exit(0);
     }
     
-    const conversation = await initConversation(user.id, conversationId);
+    const conversation = await initConversation(user.id, conversationId, aiService);
     await agentLoop(conversation);
     
     outro(chalk.green.bold("\n✨ Thanks for using Agent Mode!"));

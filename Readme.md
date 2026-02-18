@@ -1,6 +1,6 @@
 # 🛰️ Orbilt-CLI
 
-Orbilt-CLI is a powerful command-line AI agent that brings advanced AI capabilities directly into your terminal. With seamless integration of Google Gemini, secure device flow authentication, and a modern full-stack architecture, Orbilt-CLI is designed for speed, personalization, and always-on productivity—right from your CLI.
+Orbilt-CLI is a powerful command-line AI agent that brings advanced AI capabilities directly into your terminal. With seamless integration of Google Gemini, secure device flow authentication, per-user AI configuration, and a modern full-stack architecture, Orbilt-CLI is designed for speed, personalization, and always-on productivity—right from your CLI.
 
 ## 🚀 Live Demo
 
@@ -10,8 +10,9 @@ Orbilt-CLI is a powerful command-line AI agent that brings advanced AI capabilit
 
 - 🤖 AI-powered terminal agent with chat and tool-calling (Google search, code execution, URL context)
 - 🔑 Secure device flow authentication via Better Auth
+- ⚙️ **Per-user AI configuration** - Set your own Gemini API key and model
 - 🖥️ Modern Next.js dashboard with logs, user management & clean UI
-- ⚙️ Express.js backend API for authentication, prompt routing, and agent control
+- 🔧 Express.js backend API for authentication, prompt routing, and agent control
 - 🛢️ Fast, serverless Postgres storage using Prisma ORM + NeonDB
 - 📋 Fully typed schemas, session and token management
 - 🚀 Seamless CLI experience powered by Node.js Commander
@@ -29,52 +30,102 @@ Orbilt-CLI is a powerful command-line AI agent that brings advanced AI capabilit
 1. Clone the repository:
    ```bash
    git clone https://github.com/Dutta2005/orbilt-cli.git
+   cd orbilt-cli
    ```
+
 2. Install frontend dependencies and start the Next.js app:
    ```bash
    cd client
    npm install
    npm run dev
    ```
-3. Install backend dependencies and start the Express server:
+
+3. Install backend dependencies:
    ```bash
-   cd server
+   cd ../server
    npm install
+   ```
+
+4. Set up environment variables:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your credentials (see below)
+   ```
+
+5. Set up the database:
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   ```
+
+6. Start the Express server:
+   ```bash
    npm run dev
    ```
-4. Make the CLI executable and link it:
+
+7. Link the CLI globally (in a new terminal):
    ```bash
-   chmod +x server/src/cli/main.js
+   cd server
    npm link
    ```
-5. Authenticate via the CLI:
+
+8. Authenticate via the CLI:
    ```bash
    orbit login
    ```
 
 ### 🔐 Environment Variables
 
-Create a `.env` file in both the `client` and `server` directories with the following example variables:
+Create a `.env` file in the `server` directory:
 
-**For Express.js Server:**
 ```env
 PORT=3005
 
-DATABASE_URL=<your_database_url>
+# Database (Get from https://neon.tech)
+DATABASE_URL="postgresql://user:pass@host/dbname"
 
-BETTER_AUTH_SECRET=<better_auth_secret>
+# Better Auth
+BETTER_AUTH_SECRET="your-secret-key-here"
 BETTER_AUTH_URL=http://localhost:3005
 
-GITHUB_CLIENT_ID=<your_github_client_id>
-GITHUB_CLIENT_SECRET=<your_github_client_secret>
+# GitHub OAuth (Get from https://github.com/settings/developers)
+GITHUB_CLIENT_ID="your_github_client_id"
+GITHUB_CLIENT_SECRET="your_github_client_secret"
 
-GOOGLE_GENERATIVE_AI_API_KEY=<your_gemini_api_key>
+# Default Gemini API Key (Optional - users can set their own)
+GOOGLE_GENERATIVE_AI_API_KEY="your_gemini_api_key"
 ORBITAI_MODEL=gemini-2.5-flash
 
 NODE_ENV=development
 ```
 
-## 🔧 Architecture flow
+**Setup Guides:**
+- Database: See [DATABASE_SETUP.md](./DATABASE_SETUP.md)
+- GitHub OAuth: https://github.com/settings/developers
+- Gemini API: https://aistudio.google.com/apikey
+
+## 🎯 CLI Commands
+
+### Authentication
+```bash
+orbit login          # Login via device flow
+orbit logout         # Logout
+orbit whoami         # Show current user
+```
+
+### AI Configuration (New! ⭐)
+```bash
+orbit config set     # Set your own Gemini API key and model
+orbit config view    # View your current AI configuration
+```
+
+### Chat
+```bash
+orbit wakeup         # Start AI interaction
+                     # Choose: Chat, Tool Calling, or Agent Mode
+```
+
+## 🔧 Architecture Flow
 
 ```text
 ┌────────────────────┐
@@ -89,6 +140,7 @@ NODE_ENV=development
 │                    │
 │ Commands:
 │ - orbit login
+│ - orbit config set ⭐
 │ - orbit wakeup
 │ - orbit logout
 └─────────┬──────────┘
@@ -109,6 +161,7 @@ NODE_ENV=development
 │ - Prompt Routing         │
 │ - Tool Invocation        │
 │ - Logging & Persistence  │
+│ - Per-User AI Config ⭐  │
 └─────────┬────────────────┘
           │
           ▼
@@ -118,6 +171,7 @@ NODE_ENV=development
 │ - Chat Completion        │
 │ - Tool Calling           │
 │ - Search / Code / URLs   │
+│ - User's API Key ⭐      │
 └─────────┬────────────────┘
           │
           ▼
@@ -127,8 +181,9 @@ NODE_ENV=development
 │                          │
 │ - Sessions               │
 │ - Tokens                 │
-│ - Logs                   │
-│ - Usage Data             │
+│ - AI Configs ⭐          │
+│ - Conversations          │
+│ - Messages               │
 └─────────┬────────────────┘
           │
           ▼
@@ -149,25 +204,93 @@ NODE_ENV=development
 | ![Orbit Dashboard](./screenshot/image.png)  | ![Orbit Dashboard](./screenshot/image2.png) |
 | ![Orbit Dashboard](./screenshot/image3.png) | ![Orbit Dashboard](./screenshot/image4.png) |
 
-
-
 ## ⚙️ Usage / How it Works
 
-- Clone the repository and install dependencies for both the client and server.
-- Start the Next.js frontend (`npm run dev` in `client`) and Express backend (`npm run dev` in `server`).
-- Make the CLI agent executable and globally link it with `npm link` in the `server` directory.
-- In your terminal, run `orbit login` to authenticate via the device flow. Approve the device code in your browser.
-- Once logged in, use `orbit wakeup` to start interacting with your personal AI agent.
-- Explore features like chat, tool calling (Google search, code execution, URL context), and access logs via the dashboard.
-- To log out, simply run `orbit logout`.
+### Quick Start
+
+1. **Start the backend server** (Terminal 1):
+   ```bash
+   cd server
+   npm run dev
+   ```
+
+2. **Login** (Terminal 2):
+   ```bash
+   orbit login
+   ```
+   Approve the device code in your browser.
+
+3. **Configure your AI** (Optional but recommended):
+   ```bash
+   orbit config set
+   ```
+   - Enter your Gemini API key from https://aistudio.google.com/apikey
+   - Select your preferred model (gemini-2.5-flash recommended)
+   - Your API key is validated and saved securely
+
+4. **Start chatting**:
+   ```bash
+   orbit wakeup
+   ```
+   Choose from:
+   - **Chat** - Simple conversation with AI
+   - **Tool Calling** - AI with Google search and code execution
+   - **Agent Mode** - Advanced agentic behavior
+
+### Per-User AI Configuration
+
+Each user can now configure their own Gemini API key and model:
+
+```bash
+# Set your configuration
+orbit config set
+
+# View your configuration
+orbit config view
+
+# Your settings are used automatically in all chat modes
+orbit wakeup
+```
+
+**Benefits:**
+- ✅ Personal API quota (no sharing)
+- ✅ Choose your preferred model
+- ✅ Easy to update anytime
+- ✅ Falls back to server defaults if not set
+
+**Supported Models:**
+- `gemini-2.5-flash` (Recommended)
+- `gemini-2.0-flash-exp`
+- `gemini-1.5-pro`
+- `gemini-1.5-flash`
 
 ## 🗂️ Folder Structure
 
-├── client/    
-├── server/  
-├── screenshot/  
-├── .gitignore    
-└── Readme.md
+```
+orbilt-cli/
+├── client/              # Next.js frontend
+├── server/              # Express.js backend + CLI
+│   ├── src/
+│   │   ├── cli/         # CLI commands
+│   │   │   ├── commands/
+│   │   │   │   ├── auth/
+│   │   │   │   ├── ai/
+│   │   │   │   └── config/  ⭐ New
+│   │   │   ├── chat/
+│   │   │   └── ai/
+│   │   ├── services/
+│   │   │   ├── chat.services.js
+│   │   │   └── aiConfig.services.js  ⭐ New
+│   │   ├── lib/
+│   │   └── config/
+│   └── prisma/
+│       ├── schema.prisma
+│       └── migrations/
+├── screenshot/
+├── AI_CONFIG_FEATURE.md      ⭐ New
+├── QUICK_START_AI_CONFIG.md  ⭐ New
+└── README.md
+```
 
 ## 🤝 Contributions
 
@@ -180,14 +303,48 @@ We welcome all contributions! Follow these steps to contribute:
 5. ✅ Commit and push (`git commit -m "Add feature"`)
 6. 🔁 Open a Pull Request with a clear description
 
+## 📚 Documentation
+
+- [AI Configuration Feature](./AI_CONFIG_FEATURE.md) - Per-user AI config details
+- [Quick Start Guide](./QUICK_START_AI_CONFIG.md) - Get started with AI config
+- [Database Setup](./DATABASE_SETUP.md) - PostgreSQL setup guide
+- [Implementation Summary](./IMPLEMENTATION_SUMMARY.md) - Technical details
 
 ## 🚧 Upcoming Features
 
 - 🧩 npm package
-- 🌐 Multi-model support (OpenAI, Anthropic etc.)
+- 🌐 Multi-model support (OpenAI, Anthropic, etc.)
 - 🗣️ Voice command integration
 - 📊 Advanced analytics and usage insights
+- 🔐 API key encryption at rest
+- 🎨 Dashboard UI for AI configuration
+
+## 🐛 Troubleshooting
+
+**Login fails?**
+- Ensure the backend server is running (`npm run dev` in server directory)
+- Check your .env file has all required variables
+
+**Database errors?**
+- Verify DATABASE_URL in .env
+- Run `npx prisma db push` to sync schema
+
+**CLI command not found?**
+- Run `npm link` in the server directory
+- Check Node.js is installed
+
+See [LOGIN_FIX.md](./LOGIN_FIX.md) for more help.
+
+## 📝 License
+
+This project is licensed under the ISC License.
+
+## ⭐ Star History
 
 <p align="center">
   ⭐ Star this repo if you find it useful!
 </p>
+
+---
+
+**Made with ❤️ by the Orbilt team**

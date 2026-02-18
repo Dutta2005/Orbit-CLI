@@ -6,6 +6,7 @@ import { marked } from "marked";
 import { markedTerminal } from "marked-terminal";
 import { AIService } from "../ai/google-service.js";
 import { ChatService } from "../../services/chat.services.js";
+import { AiConfigService } from "../../services/aiConfig.services.js";
 import { getStoredToken } from "../commands/auth/login.js";
 import prisma from "../../lib/db.js";
 import { 
@@ -35,7 +36,7 @@ marked.use(
   })
 );
 
-const aiService = new AIService();
+const aiConfigService = new AiConfigService();
 const chatService = new ChatService();
 
 async function getUserFromToken() {
@@ -52,6 +53,9 @@ async function getUserFromToken() {
       sessions: {
         some: { token: token.access_token },
       },
+    },
+    include: {
+      aiConfig: true,
     },
   });
 
@@ -265,7 +269,7 @@ async function updateConversationTitle(conversationId, userInput, messageCount) 
   }
 }
 
-async function chatLoop(conversation) {
+async function chatLoop(conversation, aiService) {
   const enabledToolNames = getEnabledToolNames();
   const helpBox = boxen(
     `${chalk.gray('• Type your message and press Enter')}\n${chalk.gray('• AI has access to:')} ${enabledToolNames.length > 0 ? enabledToolNames.join(", ") : "No tools"}\n${chalk.gray('• Type "exit" to end conversation')}\n${chalk.gray('• Press Ctrl+C to quit anytime')}`,
@@ -342,10 +346,11 @@ export async function startToolChat(conversationId = null) {
     );
 
     const user = await getUserFromToken();
+    const aiService = new AIService(user.aiConfig);
     
     await selectTools();
     
-    const conversation = await initConversation(user.id, conversationId, "tool");
+    const conversation = await initConversation(user.id, conversationId, "tool", aiService);
     await chatLoop(conversation);
     
     resetTools();

@@ -26,6 +26,7 @@ model User {
   accounts      Account[]
 
   conversation Conversation[]
+  aiConfig     AiConfig?
 
   @@unique([email])
   @@map("user")
@@ -114,4 +115,18 @@ model Message {
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   
   @@index([conversationId])
+}
+
+model AiConfig {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  provider  String   @default("google")
+  apiKey    String
+  model     String   @default("gemini-2.5-flash")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("aiConfig")
 }
