@@ -176,14 +176,59 @@ const configViewAction = async () => {
 };
 
 export const configSet = new Command("set")
-  .description("Set your AI configuration (API key and model)")
+  .description("Configure your Google Gemini API key and select an AI model")
+  .addHelpText('after', `
+${chalk.bold.cyan('What this does:')}
+  Interactively prompts you to:
+  • Enter your Google Gemini API key
+  • Select an AI model (e.g., gemini-2.5-flash, gemini-1.5-pro)
+
+${chalk.bold.cyan('Examples:')}
+  ${chalk.gray('$')} orbit config set
+
+${chalk.bold.cyan('Get your API key:')}
+  Visit: ${chalk.blue('https://aistudio.google.com/app/apikey')}
+
+${chalk.bold.cyan('Available models:')}
+  • Gemini 2.5 Flash (Recommended)
+  • Gemini 2.0 Flash Experimental
+  • Gemini 1.5 Pro
+  • And more...
+`)
   .action(configSetAction);
 
 export const configView = new Command("view")
-  .description("View your current AI configuration")
+  .description("Display your current AI configuration settings")
+  .addHelpText('after', `
+${chalk.bold.cyan('What this does:')}
+  Shows your configured:
+  • AI provider (Google)
+  • Current model (e.g., gemini-2.5-flash)
+  • API key (partially masked for security)
+
+${chalk.bold.cyan('Examples:')}
+  ${chalk.gray('$')} orbit config view
+
+${chalk.bold.cyan('Note:')}
+  Run ${chalk.green('orbit config set')} to update your configuration.
+`)
   .action(configViewAction);
 
 export const config = new Command("config")
-  .description("Manage AI configuration")
+  .description("Manage your AI configuration (API keys and model selection)")
+  .addHelpText('after', `
+${chalk.bold.cyan('Available commands:')}
+  set     Configure API key and model
+  view    Display current configuration
+
+${chalk.bold.cyan('Examples:')}
+  ${chalk.gray('$')} orbit config set ${chalk.dim('# Set up your AI configuration')}
+  ${chalk.gray('$')} orbit config view ${chalk.dim('# View current settings')}
+
+${chalk.bold.cyan('Quick start:')}
+  1. Get API key: ${chalk.blue('https://aistudio.google.com/app/apikey')}
+  2. Run: ${chalk.green('orbit config set')}
+  3. Follow the prompts to configure
+`)
   .addCommand(configSet)
   .addCommand(configView);

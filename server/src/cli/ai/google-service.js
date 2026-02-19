@@ -77,8 +77,11 @@ export class AIService {
           steps: fullResult.steps,
         };
       } catch (error) {
-        console.error(chalk.red("AI Service Error:"), error.message);
-        console.error(chalk.red("Full error:"), error);
+        // Only log errors if not wrapped by trackApiCall
+        if (!this.userId) {
+          console.error(chalk.red("AI Service Error:"), error.message);
+          console.error(chalk.red("Full error:"), error);
+        }
         throw error;
       }
     };
@@ -109,7 +112,10 @@ export class AIService {
         
         return result.object;
       } catch (error) {
-        console.error(chalk.red("AI Structured Generation Error:"), error.message);
+        // Only log errors if not wrapped by trackApiCall
+        if (!this.userId) {
+          console.error(chalk.red("AI Structured Generation Error:"), error.message);
+        }
         throw error;
       }
     };

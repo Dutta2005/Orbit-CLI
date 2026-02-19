@@ -31,13 +31,14 @@ export class AnalyticsService {
   async getCommandStats(userId = null, startDate = null, endDate = null) {
     const where = {
       ...(userId && { userId }),
-      ...(startDate && endDate && {
-        createdAt: {
-          gte: new Date(startDate),
-          lte: new Date(endDate),
-        },
-      }),
     };
+
+    // Support partial date range filters
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = new Date(startDate);
+      if (endDate) where.createdAt.lte = new Date(endDate);
+    }
 
     const commands = await prisma.commandLog.groupBy({
       by: ["command", "status"],
@@ -51,13 +52,14 @@ export class AnalyticsService {
   async getApiCallStats(userId = null, startDate = null, endDate = null) {
     const where = {
       ...(userId && { userId }),
-      ...(startDate && endDate && {
-        createdAt: {
-          gte: new Date(startDate),
-          lte: new Date(endDate),
-        },
-      }),
     };
+
+    // Support partial date range filters
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = new Date(startDate);
+      if (endDate) where.createdAt.lte = new Date(endDate);
+    }
 
     const calls = await prisma.apiCallLog.groupBy({
       by: ["provider", "model", "status"],
@@ -75,13 +77,14 @@ export class AnalyticsService {
   async getCommandTimeline(userId = null, startDate = null, endDate = null) {
     const where = {
       ...(userId && { userId }),
-      ...(startDate && endDate && {
-        createdAt: {
-          gte: new Date(startDate),
-          lte: new Date(endDate),
-        },
-      }),
     };
+
+    // Support partial date range filters
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = new Date(startDate);
+      if (endDate) where.createdAt.lte = new Date(endDate);
+    }
 
     return await prisma.commandLog.findMany({
       where,
@@ -93,13 +96,14 @@ export class AnalyticsService {
   async getApiCallTimeline(userId = null, startDate = null, endDate = null) {
     const where = {
       ...(userId && { userId }),
-      ...(startDate && endDate && {
-        createdAt: {
-          gte: new Date(startDate),
-          lte: new Date(endDate),
-        },
-      }),
     };
+
+    // Support partial date range filters
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = new Date(startDate);
+      if (endDate) where.createdAt.lte = new Date(endDate);
+    }
 
     return await prisma.apiCallLog.findMany({
       where,
