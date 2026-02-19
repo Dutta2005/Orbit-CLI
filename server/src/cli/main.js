@@ -10,6 +10,7 @@ import { validateEnv } from "../config/env.config.js";
 import { login, logout, whoami } from "./commands/auth/login.js";
 import { config } from "./commands/config/config.js";
 import { wakeUp } from "./commands/ai/wakeUp.js";
+import { history } from "./commands/history/history.js";
 
 validateEnv();
 
@@ -35,7 +36,7 @@ ${chalk.bold.cyan('Examples:')}
   ${chalk.gray('$')} orbit login ${chalk.dim('# Authenticate with GitHub OAuth')}
   ${chalk.gray('$')} orbit wakeup ${chalk.dim('# Start chatting with AI')}
   ${chalk.gray('$')} orbit config set ${chalk.dim('# Configure your API key and model')}
-  ${chalk.gray('$')} orbit whoami ${chalk.dim('# Check your login status')}
+  ${chalk.gray('$')} orbit history view ${chalk.dim('# View your command history')}
 
 ${chalk.bold.cyan('Getting Started:')}
   1. Run ${chalk.green('orbit login')} to authenticate
@@ -51,6 +52,7 @@ ${chalk.bold.cyan('Documentation:')}
   program.addCommand(logout);
   program.addCommand(whoami);
   program.addCommand(config);
+  program.addCommand(history);
 
   program.action(() => {
     program.help();
