@@ -3,10 +3,17 @@ import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { authClient } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 
 export default function Home() {
   const { data, isPending } = authClient.useSession()
   const router = useRouter()
+
+  useEffect(() => {
+    if (!isPending && !data?.session && !data?.user) {
+      router.push("/sign-in")
+    }
+  }, [data, isPending, router])
 
   if (isPending) {
     return (
@@ -17,7 +24,7 @@ export default function Home() {
   }
 
   if (!data?.session && !data?.user) {
-    router.push("/sign-in")
+    return null
   }
 
   return (
@@ -55,7 +62,23 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Analytics Button */}
+          <Button
+            onClick={() => router.push("/analytics")}
+            className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
+          >
+            📊 View Analytics
+          </Button>
+
           {/* Sign Out Button */}
+          {/* Analytics Button */}
+          <Button
+            onClick={() => router.push("/analytics")}
+            className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
+          >
+            📊 View Analytics
+          </Button>
+
           {/* Sign Out Button */}
           <Button
             onClick={() =>

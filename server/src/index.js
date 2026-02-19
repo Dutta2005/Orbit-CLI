@@ -3,10 +3,12 @@ import { auth } from "./lib/auth.js";
 import { fromNodeHeaders, toNodeHandler } from "better-auth/node";
 import cors from "cors";
 import { validateEnv } from "./config/env.config.js";
+import { AnalyticsService } from "./services/analytics.services.js";
 
 const env = validateEnv();
 const app = express();
 const port = parseInt(env.PORT);
+const analyticsService = new AnalyticsService();
 
 app.use(
   cors({
@@ -62,6 +64,47 @@ app.get("/api/me/:access_token", async (req, res) => {
 app.get("/device", async (req, res) => {
   const { user_code } = req.query; 
   res.redirect(`http://localhost:3000/device?user_code=${user_code}`);
+});
+
+// Analytics endpoints
+app.get("/api/analytics/commands", async (req, res) => {
+  try {
+    const { userId, startDate, endDate } = req.query;
+    const stats = await analyticsService.getCommandStats(userId, startDate, endDate);
+    return res.json(stats);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/api/analytics/api-calls", async (req, res) => {
+  try {
+    const { userId, startDate, endDate } = req.query;
+    const stats = await analyticsService.getApiCallStats(userId, startDate, endDate);
+    return res.json(stats);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/api/analytics/command-timeline", async (req, res) => {
+  try {
+    const { userId, startDate, endDate } = req.query;
+    const timeline = await analyticsService.getCommandTimeline(userId, startDate, endDate);
+    return res.json(timeline);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/api/analytics/api-timeline", async (req, res) => {
+  try {
+    const { userId, startDate, endDate } = req.query;
+    const timeline = await analyticsService.getApiCallTimeline(userId, startDate, endDate);
+    return res.json(timeline);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
 });
 
 app.listen(port, () => {

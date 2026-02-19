@@ -236,7 +236,7 @@ export async function startChat(mode = "chat", conversationId = null) {
     );
 
     const user = await getUserFromToken();
-    const aiService = new AIService(user.aiConfig);
+    const aiService = new AIService(user.aiConfig, user.id);
     const conversation = await initConversation(user.id, conversationId, mode);
     await chatLoop(conversation, aiService);
     

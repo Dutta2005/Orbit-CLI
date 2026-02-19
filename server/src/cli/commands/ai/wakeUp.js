@@ -7,6 +7,7 @@ import { select } from "@clack/prompts";
 import { startChat } from "../../chat/chat-with-ai.js";
 import { startToolChat } from "../../chat/chat-with-ai-tool.js";
 import { startAgentChat } from "../../chat/chat-with-ai-agent.js";
+import { trackCommand } from "../../../lib/analytics.js";
 
 const wakeUpAction = async () => {
   const token = await getStoredToken();
@@ -63,17 +64,19 @@ const wakeUpAction = async () => {
     ],
   });
 
-  switch (choice) {
-    case "chat":
-      await startChat("chat");
-      break;
-    case "tool":
-      await startToolChat();
-      break;
-    case "agent":
-      await startAgentChat();
-      break;
-  }
+  await trackCommand(user.id, "wakeup", async () => {
+    switch (choice) {
+      case "chat":
+        await startChat("chat");
+        break;
+      case "tool":
+        await startToolChat();
+        break;
+      case "agent":
+        await startAgentChat();
+        break;
+    }
+  });
 };
 
 export const wakeUp = new Command("wakeup")
