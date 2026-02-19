@@ -66,7 +66,7 @@ Orbilt-CLI is a powerful command-line AI agent that brings advanced AI capabilit
 7. Link the CLI globally (in a new terminal):
    ```bash
    cd server
-   chmod +x src/main.js
+   chmod +x src/index.js
    npm link
    ```
 
