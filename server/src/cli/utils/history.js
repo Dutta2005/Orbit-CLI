@@ -19,10 +19,23 @@ export class HistoryManager {
         try {
             if (fs.existsSync(HISTORY_FILE)) {
                 const data = fs.readFileSync(HISTORY_FILE, "utf8");
-                this.history = data
-                    .split("\n")
-                    .filter((line) => line.trim().length > 0)
-                    .slice(-MAX_HISTORY_SIZE); // Keep only last MAX_HISTORY_SIZE entries
+                const lines = data.split("\n").filter((line) => line.trim().length > 0);
+                
+                // Try parsing as JSON (new format), fallback to plain strings (legacy)
+                this.history = lines.map(line => {
+                    try {
+                        const parsed = JSON.parse(line);
+                        // Validate the parsed object has required fields
+                        if (parsed && typeof parsed.cmd === 'string' && parsed.timestamp) {
+                            return parsed;
+                        }
+                    } catch {
+                        // Legacy format: plain string
+                    }
+                    // Convert legacy format or invalid entries to new format
+                    return { cmd: line, timestamp: new Date().toISOString() };
+                }).slice(-MAX_HISTORY_SIZE); // Keep only last MAX_HISTORY_SIZE entries
+                
                 this.currentIndex = this.history.length;
             }
         } catch (error) {
@@ -36,7 +49,10 @@ export class HistoryManager {
      */
     saveHistory() {
         try {
-            const historyContent = this.history.slice(-MAX_HISTORY_SIZE).join("\n");
+            const historyContent = this.history
+                .slice(-MAX_HISTORY_SIZE)
+                .map(entry => JSON.stringify(entry))
+                .join("\n");
             fs.writeFileSync(HISTORY_FILE, historyContent + "\n", "utf8");
         } catch (error) {
             console.error("Failed to save history:", error.message);
@@ -52,11 +68,20 @@ export class HistoryManager {
         if (trimmed.length === 0) return;
 
         // Don't add duplicate consecutive entries
-        if (this.history.length > 0 && this.history[this.history.length - 1] === trimmed) {
+        if (this.history.length > 0 && this.history[this.history.length - 1].cmd === trimmed) {
             return;
         }
 
-        this.history.push(trimmed);
+        const historyEntry = {
+            cmd: trimmed,
+            timestamp: new Date().toISOString()
+        };
+        
+        this.history.push(historyEntry);
+        
+        // Enforce MAX_HISTORY_SIZE limit on in-memory array
+        this.history = this.history.slice(-MAX_HISTORY_SIZE);
+        
         this.currentIndex = this.history.length;
         this.saveHistory();
     }
@@ -70,7 +95,7 @@ export class HistoryManager {
         if (this.currentIndex > 0) {
             this.currentIndex--;
         }
-        return this.history[this.currentIndex] || null;
+        return this.history[this.currentIndex]?.cmd || null;
     }
 
     /**
@@ -81,7 +106,7 @@ export class HistoryManager {
         if (this.history.length === 0) return null;
         if (this.currentIndex < this.history.length - 1) {
             this.currentIndex++;
-            return this.history[this.currentIndex];
+            return this.history[this.currentIndex]?.cmd;
         } else {
             this.currentIndex = this.history.length;
             return ""; // Return empty string when at the end

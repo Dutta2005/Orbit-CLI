@@ -14,9 +14,14 @@ const historyViewAction = async () => {
 
   const historyBox = boxen(
     history
-      .map((cmd, index) => {
+      .map((entry, index) => {
         const num = chalk.gray(`${index + 1}.`);
-        return `${num} ${chalk.white(cmd)}`;
+        // Format timestamp as human-readable
+        const timestamp = entry.timestamp 
+          ? chalk.gray(new Date(entry.timestamp).toLocaleString()) 
+          : chalk.gray('(no timestamp)');
+        const cmd = chalk.white(entry.cmd || entry); // Fallback for legacy format
+        return `${num} ${timestamp} ${cmd}`;
       })
       .join("\n"),
     {

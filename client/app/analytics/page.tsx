@@ -21,6 +21,7 @@ export default function AnalyticsPage() {
   const [apiTimeline, setApiTimeline] = useState([]);
   const [dateRange, setDateRange] = useState({ from: null, to: null });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchAnalytics();
@@ -28,16 +29,26 @@ export default function AnalyticsPage() {
 
   const fetchAnalytics = async () => {
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams();
       if (dateRange.from) params.append("startDate", dateRange.from.toISOString());
       if (dateRange.to) params.append("endDate", dateRange.to.toISOString());
 
+      const fetchWithErrorHandling = async (url) => {
+        const response = await fetch(url, { credentials: 'include' });
+        if (!response.ok) {
+          const errorText = await response.text().catch(() => 'Unknown error');
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        return response.json();
+      };
+
       const [commands, apiCalls, cmdTimeline, apiTime] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/analytics/commands?${params}`, { credentials: 'include' }).then(r => r.json()),
-        fetch(`${API_BASE_URL}/api/analytics/api-calls?${params}`, { credentials: 'include' }).then(r => r.json()),
-        fetch(`${API_BASE_URL}/api/analytics/command-timeline?${params}`, { credentials: 'include' }).then(r => r.json()),
-        fetch(`${API_BASE_URL}/api/analytics/api-timeline?${params}`, { credentials: 'include' }).then(r => r.json()),
+        fetchWithErrorHandling(`${API_BASE_URL}/api/analytics/commands?${params}`),
+        fetchWithErrorHandling(`${API_BASE_URL}/api/analytics/api-calls?${params}`),
+        fetchWithErrorHandling(`${API_BASE_URL}/api/analytics/command-timeline?${params}`),
+        fetchWithErrorHandling(`${API_BASE_URL}/api/analytics/api-timeline?${params}`),
       ]);
 
       setCommandStats(commands);
@@ -46,6 +57,7 @@ export default function AnalyticsPage() {
       setApiTimeline(apiTime);
     } catch (error) {
       console.error("Failed to fetch analytics:", error);
+      setError(error.message || "Failed to fetch analytics data");
     } finally {
       setLoading(false);
     }
@@ -119,6 +131,21 @@ export default function AnalyticsPage() {
         </Popover>
       </div>
 
+      {error && (
+        <div className="bg-destructive/15 text-destructive px-4 py-3 rounded-lg border border-destructive/50">
+          <div className="font-semibold">Failed to load analytics</div>
+          <div className="text-sm">{error}</div>
+        </div>
+      )}
+
+      {loading && (
+        <div className="text-center py-12">
+          <div className="text-muted-foreground">Loading analytics...</div>
+        </div>
+      )}
+
+      {!loading && !error && (
+      <>
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader>
@@ -271,6 +298,8 @@ export default function AnalyticsPage() {
           </Card>
         </TabsContent>
       </Tabs>
+      </>
+      )}
     </div>
   );
 }
