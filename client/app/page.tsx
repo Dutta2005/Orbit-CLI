@@ -71,15 +71,6 @@ export default function Home() {
           </Button>
 
           {/* Sign Out Button */}
-          {/* Analytics Button */}
-          <Button
-            onClick={() => router.push("/analytics")}
-            className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
-          >
-            📊 View Analytics
-          </Button>
-
-          {/* Sign Out Button */}
           <Button
             onClick={() =>
               authClient.signOut({
