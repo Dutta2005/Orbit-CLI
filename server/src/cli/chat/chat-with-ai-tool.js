@@ -180,7 +180,7 @@ async function saveMessage(conversationId, role, content) {
   return await chatService.addMessage(conversationId, role, content);
 }
 
-async function getAIResponse(conversationId) {
+async function getAIResponse(conversationId, aiService) {
   const spinner = yoctoSpinner({ 
     text: "AI is thinking...", 
     color: "cyan" 
@@ -329,7 +329,7 @@ async function chatLoop(conversation, aiService) {
 
     await saveMessage(conversation.id, "user", userInput);
     const messages = await chatService.getMessages(conversation.id);
-    const aiResponse = await getAIResponse(conversation.id);
+    const aiResponse = await getAIResponse(conversation.id, aiService);
     await saveMessage(conversation.id, "assistant", aiResponse);
     await updateConversationTitle(conversation.id, userInput, messages.length);
   }
@@ -346,12 +346,12 @@ export async function startToolChat(conversationId = null) {
     );
 
     const user = await getUserFromToken();
-    const aiService = new AIService(user.aiConfig);
+    const aiService = new AIService(user.aiConfig, user.id);
     
     await selectTools();
     
-    const conversation = await initConversation(user.id, conversationId, "tool", aiService);
-    await chatLoop(conversation);
+    const conversation = await initConversation(user.id, conversationId, "tool");
+    await chatLoop(conversation, aiService);
     
     resetTools();
     

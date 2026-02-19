@@ -68,7 +68,7 @@ async function saveMessage(conversationId, role, content) {
   return await chatService.addMessage(conversationId, role, content);
 }
 
-async function agentLoop(conversation) {
+async function agentLoop(conversation, aiService) {
   const helpBox = boxen(
     `${chalk.cyan.bold("What can the agent do?")}\n\n` +
     `${chalk.gray('• Generate complete applications from descriptions')}\n` +
@@ -192,7 +192,7 @@ export async function startAgentChat(conversationId = null) {
     );
 
     const user = await getUserFromToken();
-    const aiService = new AIService(user.aiConfig);
+    const aiService = new AIService(user.aiConfig, user.id);
     
     // Warning about file system access
     const shouldContinue = await confirm({
@@ -205,8 +205,8 @@ export async function startAgentChat(conversationId = null) {
       process.exit(0);
     }
     
-    const conversation = await initConversation(user.id, conversationId, aiService);
-    await agentLoop(conversation);
+    const conversation = await initConversation(user.id, conversationId);
+    await agentLoop(conversation, aiService);
     
     outro(chalk.green.bold("\n✨ Thanks for using Agent Mode!"));
     
