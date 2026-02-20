@@ -7,6 +7,7 @@ import { getStoredToken } from "../commands/auth/login.js";
 import prisma from "../../lib/db.js";
 import { generateApplication } from "../../config/agent.config.js";
 import { AiConfigService } from "../../services/aiConfig.services.js";
+import { historyManager } from "../utils/history.js";
 
 const aiConfigService = new AiConfigService();
 const chatService = new ChatService();
@@ -114,6 +115,9 @@ async function agentLoop(conversation, aiService) {
       console.log(chalk.yellow("\n👋 Agent session ended\n"));
       break;
     }
+
+    // Save to history
+    historyManager.add(userInput);
 
     const userBox = boxen(chalk.white(userInput), {
       padding: 1,

@@ -112,10 +112,8 @@ export class AIService {
         
         return result.object;
       } catch (error) {
-        // Only log errors if not wrapped by trackApiCall
-        if (!this.userId) {
-          console.error(chalk.red("AI Structured Generation Error:"), error.message);
-        }
+        // Always log errors for observability
+        console.error(chalk.red("AI Structured Generation Error:"), error.stack || error);
         throw error;
       }
     };

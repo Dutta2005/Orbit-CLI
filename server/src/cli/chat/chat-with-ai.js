@@ -9,6 +9,7 @@ import { ChatService } from "../../services/chat.services.js";
 import { AiConfigService } from "../../services/aiConfig.services.js";
 import { getStoredToken } from "../commands/auth/login.js";
 import prisma from "../../lib/db.js";
+import { historyManager } from "../utils/history.js";
 
 marked.use(
   markedTerminal({
@@ -216,6 +217,9 @@ async function chatLoop(conversation, aiService) {
       console.log(exitBox);
       break;
     }
+
+    // Save to history
+    historyManager.add(userInput);
 
     await saveMessage(conversation.id, "user", userInput);
     const messages = await chatService.getMessages(conversation.id);

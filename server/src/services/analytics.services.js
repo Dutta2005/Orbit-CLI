@@ -33,11 +33,25 @@ export class AnalyticsService {
       ...(userId && { userId }),
     };
 
-    // Support partial date range filters
+    // Support partial date range filters with validation
     if (startDate || endDate) {
       where.createdAt = {};
-      if (startDate) where.createdAt.gte = new Date(startDate);
-      if (endDate) where.createdAt.lte = new Date(endDate);
+      if (startDate) {
+        const start = new Date(startDate);
+        if (!isNaN(start.getTime())) {
+          where.createdAt.gte = start;
+        }
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        if (!isNaN(end.getTime())) {
+          where.createdAt.lte = end;
+        }
+      }
+      // Remove createdAt filter if no valid dates were provided
+      if (Object.keys(where.createdAt).length === 0) {
+        delete where.createdAt;
+      }
     }
 
     const commands = await prisma.commandLog.groupBy({
@@ -54,11 +68,25 @@ export class AnalyticsService {
       ...(userId && { userId }),
     };
 
-    // Support partial date range filters
+    // Support partial date range filters with validation
     if (startDate || endDate) {
       where.createdAt = {};
-      if (startDate) where.createdAt.gte = new Date(startDate);
-      if (endDate) where.createdAt.lte = new Date(endDate);
+      if (startDate) {
+        const start = new Date(startDate);
+        if (!isNaN(start.getTime())) {
+          where.createdAt.gte = start;
+        }
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        if (!isNaN(end.getTime())) {
+          where.createdAt.lte = end;
+        }
+      }
+      // Remove createdAt filter if no valid dates were provided
+      if (Object.keys(where.createdAt).length === 0) {
+        delete where.createdAt;
+      }
     }
 
     const calls = await prisma.apiCallLog.groupBy({
@@ -79,11 +107,25 @@ export class AnalyticsService {
       ...(userId && { userId }),
     };
 
-    // Support partial date range filters
+    // Support partial date range filters with validation
     if (startDate || endDate) {
       where.createdAt = {};
-      if (startDate) where.createdAt.gte = new Date(startDate);
-      if (endDate) where.createdAt.lte = new Date(endDate);
+      if (startDate) {
+        const start = new Date(startDate);
+        if (!isNaN(start.getTime())) {
+          where.createdAt.gte = start;
+        }
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        if (!isNaN(end.getTime())) {
+          where.createdAt.lte = end;
+        }
+      }
+      // Remove createdAt filter if no valid dates were provided
+      if (Object.keys(where.createdAt).length === 0) {
+        delete where.createdAt;
+      }
     }
 
     return await prisma.commandLog.findMany({
@@ -98,11 +140,25 @@ export class AnalyticsService {
       ...(userId && { userId }),
     };
 
-    // Support partial date range filters
+    // Support partial date range filters with validation
     if (startDate || endDate) {
       where.createdAt = {};
-      if (startDate) where.createdAt.gte = new Date(startDate);
-      if (endDate) where.createdAt.lte = new Date(endDate);
+      if (startDate) {
+        const start = new Date(startDate);
+        if (!isNaN(start.getTime())) {
+          where.createdAt.gte = start;
+        }
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        if (!isNaN(end.getTime())) {
+          where.createdAt.lte = end;
+        }
+      }
+      // Remove createdAt filter if no valid dates were provided
+      if (Object.keys(where.createdAt).length === 0) {
+        delete where.createdAt;
+      }
     }
 
     return await prisma.apiCallLog.findMany({
