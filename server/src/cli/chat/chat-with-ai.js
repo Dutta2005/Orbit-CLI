@@ -1,10 +1,10 @@
 import chalk from "chalk";
 import boxen from "boxen";
-import { text, isCancel, intro, outro } from "@clack/prompts";
+import { text, isCancel, intro, outro, select } from "@clack/prompts";
 import yoctoSpinner from "yocto-spinner";
 import { marked } from "marked";
 import { markedTerminal } from "marked-terminal";
-import { AIService } from "../ai/google-service.js";
+import { AIService } from "../ai/ai-service.js";
 import { ChatService } from "../../services/chat.services.js";
 import { AiConfigService } from "../../services/aiConfig.services.js";
 import { getStoredToken } from "../commands/auth/login.js";
@@ -33,44 +33,17 @@ marked.use(
 const chatService = new ChatService();
 const aiConfigService = new AiConfigService();
 
-async function getUserFromToken() {
-  const token = await getStoredToken();
-  
-  if (!token?.access_token) {
-    throw new Error("Not authenticated. Please run 'orbit login' first.");
-  }
 
-  const spinner = yoctoSpinner({ text: "Authenticating..." }).start();
-
-  const user = await prisma.user.findFirst({
-    where: {
-      sessions: {
-        some: { token: token.access_token },
-      },
-    },
-    include: {
-      aiConfig: true,
-    },
-  });
-
-  if (!user) {
-    spinner.error("User not found");
-    throw new Error("User not found. Please login again.");
-  }
-
-  spinner.success(`Welcome back, ${user.name}!`);
-  return user;
-}
 
 async function initConversation(userId, conversationId = null, mode = "chat") {
   const spinner = yoctoSpinner({ text: "Loading conversation..." }).start();
-  
+
   const conversation = await chatService.getOrCreateConversation(
     userId,
     conversationId,
     mode
   );
-  
+
   spinner.success("Conversation loaded");
 
   const conversationInfo = boxen(
@@ -84,14 +57,14 @@ async function initConversation(userId, conversationId = null, mode = "chat") {
       titleAlignment: "center",
     }
   );
-  
+
   console.log(conversationInfo);
 
   if (conversation.messages?.length > 0) {
     console.log(chalk.yellow("📜 Previous messages:\n"));
     displayMessages(conversation.messages);
   }
-  
+
   return conversation;
 }
 
@@ -127,17 +100,17 @@ async function saveMessage(conversationId, role, content) {
 }
 
 async function getAIResponse(conversationId, aiService) {
-  const spinner = yoctoSpinner({ 
-    text: "AI is thinking...", 
-    color: "cyan" 
+  const spinner = yoctoSpinner({
+    text: "AI is thinking...",
+    color: "cyan"
   }).start();
 
   const dbMessages = await chatService.getMessages(conversationId);
   const aiMessages = chatService.formatMessagesForAI(dbMessages);
-  
+
   let fullResponse = "";
   let isFirstChunk = true;
-  
+
   try {
     const result = await aiService.sendMessage(aiMessages, (chunk) => {
       if (isFirstChunk) {
@@ -150,16 +123,25 @@ async function getAIResponse(conversationId, aiService) {
       }
       fullResponse += chunk;
     });
-    
+
     console.log("\n");
     const renderedMarkdown = marked.parse(fullResponse);
     console.log(renderedMarkdown);
     console.log(chalk.gray("─".repeat(60)));
     console.log("\n");
-    
+
     return result.content;
   } catch (error) {
     spinner.error("Failed to get AI response");
+    if (error.statusCode === 401 || error.statusCode === 403 || error.message?.includes("API_KEY") || error.message?.includes("key")) {
+      console.log(boxen(chalk.red("❌ Authentication Error: Invalid or missing API Key.\nPlease check your configuration using 'orbit config set'."), {
+        padding: 1, margin: 1, borderStyle: "round", borderColor: "red"
+      }));
+    } else {
+      console.log(boxen(chalk.red(`❌ AI Error: ${error.message}`), {
+        padding: 1, margin: 1, borderStyle: "round", borderColor: "red"
+      }));
+    }
     throw error;
   }
 }
@@ -182,7 +164,7 @@ async function chatLoop(conversation, aiService) {
       dimBorder: true,
     }
   );
-  
+
   console.log(helpBox);
 
   while (true) {
@@ -223,13 +205,22 @@ async function chatLoop(conversation, aiService) {
 
     await saveMessage(conversation.id, "user", userInput);
     const messages = await chatService.getMessages(conversation.id);
-    const aiResponse = await getAIResponse(conversation.id, aiService);
+
+    let aiResponse;
+    try {
+      aiResponse = await getAIResponse(conversation.id, aiService);
+    } catch (error) {
+      // The error is already printed via getAIResponse gracefully.
+      // We just need to terminate the loop and CLI entirely.
+      process.exit(1);
+    }
+
     await saveMessage(conversation.id, "assistant", aiResponse);
     await updateConversationTitle(conversation.id, userInput, messages.length);
   }
 }
 
-export async function startChat(mode = "chat", conversationId = null) {
+export async function startChat(user, mode = "chat", conversationId = null) {
   try {
     intro(
       boxen(chalk.bold.cyan("🚀 Orbit AI Chat"), {
@@ -239,20 +230,43 @@ export async function startChat(mode = "chat", conversationId = null) {
       })
     );
 
-    const user = await getUserFromToken();
-    const aiService = new AIService(user.aiConfig, user.id);
+
+
+    const providerChoice = await select({
+      message: chalk.cyan("Select your AI model provider:"),
+      options: [
+        { value: "google", label: "Google Gemini (Default)", hint: "Recommended" },
+        { value: "openai", label: "OpenAI GPT" },
+        { value: "anthropic", label: "Anthropic Claude" }
+      ],
+      initialValue: "google"
+    });
+
+    if (isCancel(providerChoice)) {
+      console.log(chalk.yellow("Chat cancelled."));
+      process.exit(0);
+    }
+
+    const userConfig = user.aiConfig || {};
+    userConfig.provider = providerChoice;
+
+    const aiService = new AIService(userConfig, user.id);
     const conversation = await initConversation(user.id, conversationId, mode);
     await chatLoop(conversation, aiService);
-    
+
     outro(chalk.green("✨ Thanks for chatting!"));
   } catch (error) {
-    const errorBox = boxen(chalk.red(`❌ Error: ${error.message}`), {
-      padding: 1,
-      margin: 1,
-      borderStyle: "round",
-      borderColor: "red",
-    });
-    console.log(errorBox);
+    // If the error was already printed beautifully in getAIResponse, we just exit.
+    // Otherwise we print a fallback.
+    if (!error.message?.includes("API_KEY") && !error.message?.includes("key") && error.statusCode !== 401 && error.statusCode !== 403) {
+      const errorBox = boxen(chalk.red(`❌ Error: ${error.message}`), {
+        padding: 1,
+        margin: 1,
+        borderStyle: "round",
+        borderColor: "red",
+      });
+      console.log(errorBox);
+    }
     process.exit(1);
   }
 }

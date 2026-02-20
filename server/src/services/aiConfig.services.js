@@ -1,5 +1,5 @@
 import prisma from "../lib/db.js";
-import { google } from "@ai-sdk/google";
+import { AIFactory } from "./ai/ai.factory.js";
 
 export class AiConfigService {
   async getConfig(userId) {
@@ -8,11 +8,11 @@ export class AiConfigService {
     });
   }
 
-  async setConfig(userId, apiKey, model) {
+  async setConfig(userId, apiKey, model, provider = "google") {
     return await prisma.aiConfig.upsert({
       where: { userId },
-      update: { apiKey, model, updatedAt: new Date() },
-      create: { userId, apiKey, model, provider: "google" },
+      update: { apiKey, model, provider, updatedAt: new Date() },
+      create: { userId, apiKey, model, provider },
     });
   }
 
@@ -22,12 +22,12 @@ export class AiConfigService {
     });
   }
 
-  async validateApiKey(apiKey, model) {
+  async validateApiKey(apiKey, model, providerName = "google") {
     try {
-      const testModel = google(model, { apiKey });
+      const provider = AIFactory.createProvider({ provider: providerName, apiKey, model });
       const { generateText } = await import("ai");
       await generateText({
-        model: testModel,
+        model: provider.model,
         prompt: "test",
         maxTokens: 5,
       });

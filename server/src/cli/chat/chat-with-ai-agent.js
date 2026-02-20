@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import boxen from "boxen";
-import { text, isCancel, cancel, intro, outro, confirm } from "@clack/prompts";
-import { AIService } from "../ai/google-service.js";
+import { text, isCancel, cancel, intro, outro, confirm, select } from "@clack/prompts";
+import { AIService } from "../ai/ai-service.js";
 import { ChatService } from "../../services/chat.services.js";
 import { getStoredToken } from "../commands/auth/login.js";
 import prisma from "../../lib/db.js";
@@ -12,31 +12,6 @@ import { historyManager } from "../utils/history.js";
 const aiConfigService = new AiConfigService();
 const chatService = new ChatService();
 
-async function getUserFromToken() {
-  const token = await getStoredToken();
-  
-  if (!token?.access_token) {
-    throw new Error("Not authenticated. Please run 'orbit login' first.");
-  }
-
-  const user = await prisma.user.findFirst({
-    where: {
-      sessions: {
-        some: { token: token.access_token },
-      },
-    },
-    include: {
-      aiConfig: true,
-    },
-  });
-
-  if (!user) {
-    throw new Error("User not found. Please login again.");
-  }
-
-  console.log(chalk.green(`\n✓ Welcome back, ${user.name}!\n`));
-  return user;
-}
 
 async function initConversation(userId, conversationId = null) {
   const conversation = await chatService.getOrCreateConversation(
@@ -44,7 +19,7 @@ async function initConversation(userId, conversationId = null) {
     conversationId,
     "agent"
   );
-  
+
   const conversationInfo = boxen(
     `${chalk.bold("Conversation")}: ${conversation.title}\n` +
     `${chalk.gray("ID:")} ${conversation.id}\n` +
@@ -59,9 +34,9 @@ async function initConversation(userId, conversationId = null) {
       titleAlignment: "center",
     }
   );
-  
+
   console.log(conversationInfo);
-  
+
   return conversation;
 }
 
@@ -89,7 +64,7 @@ async function agentLoop(conversation, aiService) {
       title: "💡 Agent Instructions",
     }
   );
-  
+
   console.log(helpBox);
 
   while (true) {
@@ -146,7 +121,7 @@ async function agentLoop(conversation, aiService) {
           `Files created: ${result.files.length}\n` +
           `Location: ${result.appDir}\n\n` +
           `Setup commands:\n${result.commands.join('\n')}`;
-        
+
         await saveMessage(conversation.id, "assistant", responseMessage);
 
         // Ask if user wants to generate another app
@@ -165,27 +140,27 @@ async function agentLoop(conversation, aiService) {
       }
 
     } catch (error) {
-      console.log(chalk.red(`\n❌ Error: ${error.message}\n`));
-      
-      await saveMessage(conversation.id, "assistant", `Error: ${error.message}`);
-      
-      const retry = await confirm({
-        message: chalk.cyan("Would you like to try again?"),
-        initialValue: true,
-      });
-
-      if (isCancel(retry) || !retry) {
-        break;
+      if (!error.message?.includes("API_KEY") && !error.message?.includes("key") && error.statusCode !== 401 && error.statusCode !== 403) {
+        console.log(boxen(chalk.red(`❌ AI Error: ${error.message}`), {
+          padding: 1, margin: 1, borderStyle: "round", borderColor: "red"
+        }));
+      } else {
+        console.log(boxen(chalk.red("❌ Authentication Error: Invalid or missing API Key.\nPlease check your configuration using 'orbit config set'."), {
+          padding: 1, margin: 1, borderStyle: "round", borderColor: "red"
+        }));
       }
+
+      await saveMessage(conversation.id, "assistant", `Error: ${error.message}`);
+      process.exit(1);
     }
   }
 }
 
-export async function startAgentChat(conversationId = null) {
+export async function startAgentChat(user, conversationId = null) {
   try {
     intro(
       boxen(
-        chalk.bold.magenta("🤖 Orbit AI - Agent Mode\n\n") + 
+        chalk.bold.magenta("🤖 Orbit AI - Agent Mode\n\n") +
         chalk.gray("Autonomous Application Generator"),
         {
           padding: 1,
@@ -195,9 +170,28 @@ export async function startAgentChat(conversationId = null) {
       )
     );
 
-    const user = await getUserFromToken();
-    const aiService = new AIService(user.aiConfig, user.id);
-    
+
+
+    const providerChoice = await select({
+      message: chalk.cyan("Select your AI model provider:"),
+      options: [
+        { value: "google", label: "Google Gemini (Default)", hint: "Recommended" },
+        { value: "openai", label: "OpenAI GPT" },
+        { value: "anthropic", label: "Anthropic Claude" }
+      ],
+      initialValue: "google"
+    });
+
+    if (isCancel(providerChoice)) {
+      console.log(chalk.yellow("Chat cancelled."));
+      process.exit(0);
+    }
+
+    const userConfig = user.aiConfig || {};
+    userConfig.provider = providerChoice;
+
+    const aiService = new AIService(userConfig, user.id);
+
     // Warning about file system access
     const shouldContinue = await confirm({
       message: chalk.yellow("⚠️  The agent will create files and folders in the current directory. Continue?"),
@@ -208,20 +202,13 @@ export async function startAgentChat(conversationId = null) {
       cancel(chalk.yellow("Agent mode cancelled"));
       process.exit(0);
     }
-    
+
     const conversation = await initConversation(user.id, conversationId);
     await agentLoop(conversation, aiService);
-    
+
     outro(chalk.green.bold("\n✨ Thanks for using Agent Mode!"));
-    
+
   } catch (error) {
-    const errorBox = boxen(chalk.red(`❌ Error: ${error.message}`), {
-      padding: 1,
-      margin: 1,
-      borderStyle: "round",
-      borderColor: "red",
-    });
-    console.log(errorBox);
     process.exit(1);
   }
 }

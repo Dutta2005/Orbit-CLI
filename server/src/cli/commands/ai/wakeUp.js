@@ -26,11 +26,8 @@ const wakeUpAction = async () => {
         some: { token: token.access_token },
       },
     },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      image: true,
+    include: {
+      aiConfig: true,
     },
   });
 
@@ -72,13 +69,13 @@ const wakeUpAction = async () => {
   await trackCommand(user.id, "wakeup", async () => {
     switch (choice) {
       case "chat":
-        await startChat("chat");
+        await startChat(user, "chat");
         break;
       case "tool":
-        await startToolChat();
+        await startToolChat(user);
         break;
       case "agent":
-        await startAgentChat();
+        await startAgentChat(user);
         break;
     }
   });

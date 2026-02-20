@@ -21,9 +21,23 @@ const GEMINI_MODELS = [
   { value: "gemini-2.0-flash-thinking-exp", label: "Gemini 2.0 Flash Thinking (Experimental)" },
 ];
 
+const OPENAI_MODELS = [
+  { value: "gpt-4o", label: "GPT-4o (Recommended)" },
+  { value: "gpt-4o-mini", label: "GPT-4o Mini" },
+  { value: "gpt-4.1-mini", label: "GPT-4.1 Mini" },
+  { value: "gpt-4-turbo", label: "GPT-4 Turbo" },
+  { value: "gpt-3.5-turbo", label: "GPT-3.5 Turbo" },
+];
+
+const ANTHROPIC_MODELS = [
+  { value: "claude-3-5-sonnet-latest", label: "Claude 3.5 Sonnet (Recommended)" },
+  { value: "claude-3-5-haiku-latest", label: "Claude 3.5 Haiku" },
+  { value: "claude-3-opus-latest", label: "Claude 3 Opus" },
+];
+
 async function getUserFromToken() {
   const token = await getStoredToken();
-  
+
   if (!token?.access_token) {
     throw new Error("Not authenticated. Please run 'orbit login' first.");
   }
@@ -58,30 +72,47 @@ const configSetAction = async () => {
 
     const user = await getUserFromToken();
     let isValid = false;
-    let apiKey, model;
+    let providerName, apiKey, model;
+
+    providerName = await select({
+      message: chalk.blue("Configure your preferred AI provider"),
+      options: [
+        { value: "google", label: "Google Gemini", hint: "Recommended" },
+        { value: "openai", label: "OpenAI GPT" },
+        { value: "anthropic", label: "Anthropic Claude" }
+      ],
+      initialValue: "google"
+    });
+
+    const providerNames = {
+      google: "Google Gemini",
+      openai: "OpenAI",
+      anthropic: "Anthropic"
+    };
 
     while (!isValid) {
       apiKey = await text({
-        message: chalk.blue("Enter your Google Gemini API key"),
-        placeholder: "AIza...",
+        message: chalk.blue(`Enter your ${providerNames[providerName]} API key`),
+        placeholder: "API Key...",
         validate(value) {
           if (!value || value.trim().length === 0) {
             return "API key cannot be empty";
           }
-          if (!value.startsWith("AIza")) {
-            return "Invalid API key format";
-          }
         },
       });
 
+      let modelOptions = GEMINI_MODELS;
+      if (providerName === "openai") modelOptions = OPENAI_MODELS;
+      if (providerName === "anthropic") modelOptions = ANTHROPIC_MODELS;
+
       model = await select({
-        message: chalk.blue("Select Gemini model"),
-        options: GEMINI_MODELS,
+        message: chalk.blue(`Select ${providerNames[providerName]} model`),
+        options: modelOptions,
       });
 
       const spinner = yoctoSpinner({ text: "Validating API key..." }).start();
 
-      isValid = await aiConfigService.validateApiKey(apiKey, model);
+      isValid = await aiConfigService.validateApiKey(apiKey, model, providerName);
 
       if (!isValid) {
         spinner.error("Invalid API key or model");
@@ -108,13 +139,13 @@ const configSetAction = async () => {
 
     const saveSpinner = yoctoSpinner({ text: "Saving configuration..." }).start();
 
-    await aiConfigService.setConfig(user.id, apiKey, model);
+    await aiConfigService.setConfig(user.id, apiKey, model, providerName);
 
     saveSpinner.success("Configuration saved");
 
     console.log(
       boxen(
-        `${chalk.green("✅ AI configuration saved successfully!")}\n\n${chalk.gray("Model:")} ${chalk.white(model)}\n${chalk.gray("API Key:")} ${chalk.white(apiKey.slice(0, 10) + "...")}`,
+        `${chalk.green("✅ AI configuration saved successfully!")}\n\n${chalk.gray("Provider:")} ${chalk.white(providerNames[providerName])}\n${chalk.gray("Model:")} ${chalk.white(model)}\n${chalk.gray("API Key:")} ${chalk.white(apiKey.slice(0, 10) + "...")}`,
         {
           padding: 1,
           margin: 1,
@@ -176,24 +207,26 @@ const configViewAction = async () => {
 };
 
 export const configSet = new Command("set")
-  .description("Configure your Google Gemini API key and select an AI model")
+  .description("Configure your AI provider, API key, and select an AI model")
   .addHelpText('after', `
 ${chalk.bold.cyan('What this does:')}
   Interactively prompts you to:
-  • Enter your Google Gemini API key
-  • Select an AI model (e.g., gemini-2.5-flash, gemini-1.5-pro)
+  • Select your preferred AI Provider (Gemini, OpenAI, Anthropic)
+  • Enter your AI provider API key
+  • Select an AI model (e.g., gemini-2.5-flash, gpt-4o, claude-3-5-sonnet)
 
 ${chalk.bold.cyan('Examples:')}
   ${chalk.gray('$')} orbit config set
 
 ${chalk.bold.cyan('Get your API key:')}
-  Visit: ${chalk.blue('https://aistudio.google.com/app/apikey')}
+  • Gemini: ${chalk.blue('https://aistudio.google.com/app/apikey')}
+  • OpenAI: ${chalk.blue('https://platform.openai.com/api-keys')}
+  • Anthropic: ${chalk.blue('https://console.anthropic.com/settings/keys')}
 
 ${chalk.bold.cyan('Available models:')}
-  • Gemini 2.5 Flash (Recommended)
-  • Gemini 2.0 Flash Experimental
-  • Gemini 1.5 Pro
-  • And more...
+  • Gemini: 2.5 Flash, 1.5 Pro, etc.
+  • OpenAI: GPT-4o, GPT-4o-Mini, etc.
+  • Anthropic: Claude 3.5 Sonnet, Claude 3 Opus, etc.
 `)
   .action(configSetAction);
 
