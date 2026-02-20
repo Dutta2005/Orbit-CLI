@@ -22,13 +22,29 @@ async function main() {
       })
     )
   );
-  console.log(chalk.gray("A Cli based AI tool \n"));
+  console.log(chalk.gray("A powerful CLI-based AI assistant with authentication and configuration management\n"));
 
   const program = new Command("orbit");
 
   program
     .version("0.0.1")
-    .description("Orbit CLI - Device Flow Authentication");
+    .description("Orbit CLI - Your AI-powered command-line assistant")
+    .usage("<command> [options]")
+    .addHelpText('after', `
+${chalk.bold.cyan('Examples:')}
+  ${chalk.gray('$')} orbit login ${chalk.dim('# Authenticate with GitHub OAuth')}
+  ${chalk.gray('$')} orbit wakeup ${chalk.dim('# Start chatting with AI')}
+  ${chalk.gray('$')} orbit config set ${chalk.dim('# Configure your API key and model')}
+  ${chalk.gray('$')} orbit whoami ${chalk.dim('# Check your login status')}
+
+${chalk.bold.cyan('Getting Started:')}
+  1. Run ${chalk.green('orbit login')} to authenticate
+  2. Run ${chalk.green('orbit config set')} to configure your AI settings
+  3. Run ${chalk.green('orbit wakeup')} to start using AI features
+
+${chalk.bold.cyan('Documentation:')}
+  ${chalk.blue('https://github.com/Dutta2005/Orbit-CLI#readme')}
+`);
 
   program.addCommand(wakeUp);
   program.addCommand(login);

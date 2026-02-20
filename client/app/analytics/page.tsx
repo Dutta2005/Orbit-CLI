@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,8 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3005";
 
 export default function AnalyticsPage() {
   const [commandStats, setCommandStats] = useState([]);
@@ -32,10 +34,10 @@ export default function AnalyticsPage() {
       if (dateRange.to) params.append("endDate", dateRange.to.toISOString());
 
       const [commands, apiCalls, cmdTimeline, apiTime] = await Promise.all([
-        fetch(`http://localhost:3005/api/analytics/commands?${params}`).then(r => r.json()),
-        fetch(`http://localhost:3005/api/analytics/api-calls?${params}`).then(r => r.json()),
-        fetch(`http://localhost:3005/api/analytics/command-timeline?${params}`).then(r => r.json()),
-        fetch(`http://localhost:3005/api/analytics/api-timeline?${params}`).then(r => r.json()),
+        fetch(`${API_BASE_URL}/api/analytics/commands?${params}`, { credentials: 'include' }).then(r => r.json()),
+        fetch(`${API_BASE_URL}/api/analytics/api-calls?${params}`, { credentials: 'include' }).then(r => r.json()),
+        fetch(`${API_BASE_URL}/api/analytics/command-timeline?${params}`, { credentials: 'include' }).then(r => r.json()),
+        fetch(`${API_BASE_URL}/api/analytics/api-timeline?${params}`, { credentials: 'include' }).then(r => r.json()),
       ]);
 
       setCommandStats(commands);
@@ -68,8 +70,9 @@ export default function AnalyticsPage() {
   const apiCallsByModel = apiStats.reduce((acc, stat) => {
     const existing = acc.find(item => item.model === stat.model);
     if (existing) {
+      const newAvg = (existing.avgDuration * existing.count + (stat._avg.duration || 0) * stat._count) / (existing.count + stat._count);
       existing.count += stat._count;
-      existing.avgDuration = (existing.avgDuration + (stat._avg.duration || 0)) / 2;
+      existing.avgDuration = newAvg;
     } else {
       acc.push({ 
         model: stat.model, 

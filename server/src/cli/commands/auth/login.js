@@ -382,16 +382,53 @@ export async function whoamiAction(opts) {
 }
 
 export const login = new Command("login")
-  .description("Login to Better Auth")
+  .description("Authenticate with GitHub OAuth to access Orbit CLI features")
   .option("--server-url <url>", "The Better Auth server URL", DEMO_URL)
   .option("--client-id <id>", "The OAuth client ID", CLIENT_ID)
+  .addHelpText('after', `
+${chalk.bold.cyan('What this does:')}
+  Opens your browser to authenticate via GitHub OAuth.
+  Once authenticated, you can use all Orbit CLI features.
+
+${chalk.bold.cyan('Examples:')}
+  ${chalk.gray('$')} orbit login
+  ${chalk.gray('$')} orbit login --server-url https://custom.server.com
+
+${chalk.bold.cyan('Next steps:')}
+  After login, run ${chalk.green('orbit config set')} to configure your AI settings.
+`)
   .action(loginAction);
 
 export const logout = new Command("logout")
-  .description("Logout and clear stored credentials")
+  .description("Sign out and clear all stored authentication credentials")
+  .addHelpText('after', `
+${chalk.bold.cyan('What this does:')}
+  Removes your authentication token and signs you out.
+  You'll need to run ${chalk.green('orbit login')} again to use Orbit CLI.
+
+${chalk.bold.cyan('Examples:')}
+  ${chalk.gray('$')} orbit logout
+
+${chalk.bold.cyan('Note:')}
+  Your AI configuration (API keys) will be preserved.
+`)
   .action(logoutAction);
 
 export const whoami = new Command("whoami")
-  .description("Show current authenticated user")
+  .description("Display information about the currently authenticated user")
   .option("--server-url <url>", "The Better Auth server URL", DEMO_URL)
+  .addHelpText('after', `
+${chalk.bold.cyan('What this does:')}
+  Shows your GitHub username, email, and user ID.
+  Useful for verifying your login status.
+
+${chalk.bold.cyan('Examples:')}
+  ${chalk.gray('$')} orbit whoami
+  ${chalk.gray('$')} orbit whoami --server-url https://custom.server.com
+
+${chalk.bold.cyan('Output includes:')}
+  • GitHub username
+  • Email address
+  • User ID
+`)
   .action(whoamiAction);

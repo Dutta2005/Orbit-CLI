@@ -27,6 +27,8 @@ model User {
 
   conversation Conversation[]
   aiConfig     AiConfig?
+  commandLogs  CommandLog[]
+  apiCallLogs  ApiCallLog[]
 
   @@unique([email])
   @@map("user")
@@ -134,6 +136,7 @@ model AiConfig {
 model CommandLog {
   id          String   @id @default(cuid())
   userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   command     String   // login, logout, wakeup, config
   status      String   // success, failure
   duration    Int?     // milliseconds
@@ -150,6 +153,7 @@ model CommandLog {
 model ApiCallLog {
   id          String   @id @default(cuid())
   userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   provider    String   @default("google")
   model       String
   status      String   // success, failure

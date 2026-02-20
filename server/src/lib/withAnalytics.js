@@ -1,10 +1,9 @@
-import { trackCommand } from "../../../lib/analytics.js";
-import { getStoredToken } from "../commands/auth/login.js";
-import prisma from "../lib/db.js";
+import { trackCommand } from "./analytics.js";
+import { getStoredToken } from "../cli/commands/auth/login.js";
+import prisma from "./db.js";
 
 export async function withAnalytics(command, action) {
   return async (...args) => {
-    const startTime = Date.now();
     let userId = null;
     
     try {

@@ -73,9 +73,14 @@ async function seedAnalytics() {
     
   } catch (error) {
     console.error("❌ Error seeding data:", error.message);
+    throw error;
   } finally {
     await prisma.$disconnect();
   }
 }
 
-seedAnalytics();
+seedAnalytics()
+  .catch((error) => {
+    console.error("❌ Fatal error during seeding:", error);
+    process.exit(1);
+  });
