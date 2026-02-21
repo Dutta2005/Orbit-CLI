@@ -1,21 +1,21 @@
 import chalk from "chalk";
 import boxen from "boxen";
-import { text, isCancel, cancel, intro, outro, multiselect } from "@clack/prompts";
+import { text, isCancel, cancel, intro, outro, multiselect, select } from "@clack/prompts";
 import yoctoSpinner from "yocto-spinner";
 import { marked } from "marked";
 import { markedTerminal } from "marked-terminal";
-import { AIService } from "../ai/google-service.js";
+import { AIService } from "../ai/ai-service.js";
 import { ChatService } from "../../services/chat.services.js";
 import { AiConfigService } from "../../services/aiConfig.services.js";
 import { getStoredToken } from "../commands/auth/login.js";
 import prisma from "../../lib/db.js";
 import { historyManager } from "../utils/history.js";
-import { 
-  availableTools, 
-  getEnabledTools, 
-  enableTools, 
+import {
+  availableTools,
+  getEnabledTools,
+  enableTools,
   getEnabledToolNames,
-  resetTools 
+  resetTools
 } from "../../config/tool.config.js";
 
 marked.use(
@@ -42,7 +42,7 @@ const chatService = new ChatService();
 
 async function getUserFromToken() {
   const token = await getStoredToken();
-  
+
   if (!token?.access_token) {
     throw new Error("Not authenticated. Please run 'orbit login' first.");
   }
@@ -114,17 +114,17 @@ async function selectTools() {
 
 async function initConversation(userId, conversationId = null, mode = "tool") {
   const spinner = yoctoSpinner({ text: "Loading conversation..." }).start();
-  
+
   const conversation = await chatService.getOrCreateConversation(
     userId,
     conversationId,
     mode
   );
-  
+
   spinner.success("Conversation loaded");
-  
+
   const enabledToolNames = getEnabledToolNames();
-  const toolsDisplay = enabledToolNames.length > 0 
+  const toolsDisplay = enabledToolNames.length > 0
     ? `\n${chalk.gray("Active Tools:")} ${enabledToolNames.join(", ")}`
     : `\n${chalk.gray("No tools enabled")}`;
 
@@ -139,14 +139,14 @@ async function initConversation(userId, conversationId = null, mode = "tool") {
       titleAlignment: "center",
     }
   );
-  
+
   console.log(conversationInfo);
 
   if (conversation.messages?.length > 0) {
     console.log(chalk.yellow("📜 Previous messages:\n"));
     displayMessages(conversation.messages);
   }
-  
+
   return conversation;
 }
 
@@ -182,23 +182,23 @@ async function saveMessage(conversationId, role, content) {
 }
 
 async function getAIResponse(conversationId, aiService) {
-  const spinner = yoctoSpinner({ 
-    text: "AI is thinking...", 
-    color: "cyan" 
+  const spinner = yoctoSpinner({
+    text: "AI is thinking...",
+    color: "cyan"
   }).start();
 
   const dbMessages = await chatService.getMessages(conversationId);
   const aiMessages = chatService.formatMessagesForAI(dbMessages);
 
   const tools = getEnabledTools();
-  
+
   let fullResponse = "";
   let isFirstChunk = true;
   const toolCallsDetected = [];
-  
+
   try {
     const result = await aiService.sendMessage(
-      aiMessages, 
+      aiMessages,
       (chunk) => {
         if (isFirstChunk) {
           spinner.stop();
@@ -215,11 +215,11 @@ async function getAIResponse(conversationId, aiService) {
         toolCallsDetected.push(toolCall);
       }
     );
-    
+
     if (toolCallsDetected.length > 0) {
       console.log("\n");
       const toolCallBox = boxen(
-        toolCallsDetected.map(tc => 
+        toolCallsDetected.map(tc =>
           `${chalk.cyan("🔧 Tool:")} ${tc.toolName}\n${chalk.gray("Args:")} ${JSON.stringify(tc.args, null, 2)}`
         ).join("\n\n"),
         {
@@ -235,7 +235,7 @@ async function getAIResponse(conversationId, aiService) {
 
     if (result.toolResults && result.toolResults.length > 0) {
       const toolResultBox = boxen(
-        result.toolResults.map(tr => 
+        result.toolResults.map(tr =>
           `${chalk.green("✅ Tool:")} ${tr.toolName}\n${chalk.gray("Result:")} ${JSON.stringify(tr.result, null, 2).slice(0, 200)}...`
         ).join("\n\n"),
         {
@@ -248,16 +248,25 @@ async function getAIResponse(conversationId, aiService) {
       );
       console.log(toolResultBox);
     }
-    
+
     console.log("\n");
     const renderedMarkdown = marked.parse(fullResponse);
     console.log(renderedMarkdown);
     console.log(chalk.gray("─".repeat(60)));
     console.log("\n");
-    
+
     return result.content;
   } catch (error) {
     spinner.error("Failed to get AI response");
+    if (error.statusCode === 401 || error.statusCode === 403 || error.message?.includes("API_KEY") || error.message?.includes("key")) {
+      console.log(boxen(chalk.red("❌ Authentication Error: Invalid or missing API Key.\nPlease check your configuration using 'orbit config set'."), {
+        padding: 1, margin: 1, borderStyle: "round", borderColor: "red"
+      }));
+    } else {
+      console.log(boxen(chalk.red(`❌ AI Error: ${error.message}`), {
+        padding: 1, margin: 1, borderStyle: "round", borderColor: "red"
+      }));
+    }
     throw error;
   }
 }
@@ -282,7 +291,7 @@ async function chatLoop(conversation, aiService) {
       dimBorder: true,
     }
   );
-  
+
   console.log(helpBox);
 
   while (true) {
@@ -333,13 +342,23 @@ async function chatLoop(conversation, aiService) {
 
     await saveMessage(conversation.id, "user", userInput);
     const messages = await chatService.getMessages(conversation.id);
-    const aiResponse = await getAIResponse(conversation.id, aiService);
+
+    let aiResponse;
+    try {
+      aiResponse = await getAIResponse(conversation.id, aiService);
+    } catch (error) {
+      // The error is already printed via getAIResponse gracefully.
+      // We just need to terminate the loop and CLI entirely.
+      resetTools();
+      process.exit(1);
+    }
+
     await saveMessage(conversation.id, "assistant", aiResponse);
     await updateConversationTitle(conversation.id, userInput, messages.length);
   }
 }
 
-export async function startToolChat(conversationId = null) {
+export async function startToolChat(user, conversationId = null) {
   try {
     intro(
       boxen(chalk.bold.cyan("🛠️  Orbit AI - Tool Calling Mode"), {
@@ -349,26 +368,44 @@ export async function startToolChat(conversationId = null) {
       })
     );
 
-    const user = await getUserFromToken();
-    const aiService = new AIService(user.aiConfig, user.id);
-    
+
+
+    const providerChoice = await select({
+      message: chalk.cyan("Select your AI model provider:"),
+      options: [
+        { value: "google", label: "Google Gemini (Default)", hint: "Recommended" },
+        { value: "openai", label: "OpenAI GPT" },
+        { value: "anthropic", label: "Anthropic Claude" }
+      ],
+      initialValue: "google"
+    });
+
+    if (isCancel(providerChoice)) {
+      console.log(chalk.yellow("Chat cancelled."));
+      process.exit(0);
+    }
+
+    const userConfig = user.aiConfig || {};
+    userConfig.provider = providerChoice;
+
+    const aiService = new AIService(userConfig, user.id);
+
     await selectTools();
-    
+
     const conversation = await initConversation(user.id, conversationId, "tool");
     await chatLoop(conversation, aiService);
-    
+
     resetTools();
-    
+
     outro(chalk.green("✨ Thanks for using tools!"));
   } catch (error) {
-    const errorBox = boxen(chalk.red(`❌ Error: ${error.message}`), {
-      padding: 1,
-      margin: 1,
-      borderStyle: "round",
-      borderColor: "red",
-    });
-    console.log(errorBox);
     resetTools();
+    if (!error.message?.includes("API_KEY") && !error.message?.includes("key") && error.statusCode !== 401 && error.statusCode !== 403) {
+      const errorBox = boxen(chalk.red(`❌ Error: ${error.message}`), {
+        padding: 1, margin: 1, borderStyle: "round", borderColor: "red",
+      });
+      console.log(errorBox);
+    }
     process.exit(1);
   }
 }

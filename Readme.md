@@ -1,6 +1,6 @@
 # 🛰️ Orbilt-CLI
 
-Orbilt-CLI is a powerful command-line AI agent that brings advanced AI capabilities directly into your terminal. With seamless integration of Google Gemini, secure device flow authentication, per-user AI configuration, and a modern full-stack architecture, Orbilt-CLI is designed for speed, personalization, and always-on productivity—right from your CLI.
+Orbilt-CLI is a powerful command-line AI agent that brings advanced AI capabilities directly into your terminal. With seamless integration of multiple AI providers (Google Gemini, OpenAI, Anthropic), secure device flow authentication, per-user AI configuration, and a modern full-stack architecture, Orbilt-CLI is designed for speed, personalization, and always-on productivity—right from your CLI.
 
 ## 🚀 Live Demo
 
@@ -10,7 +10,7 @@ Orbilt-CLI is a powerful command-line AI agent that brings advanced AI capabilit
 
 - 🤖 AI-powered terminal agent with chat and tool-calling (Google search, code execution, URL context)
 - 🔑 Secure device flow authentication via Better Auth
-- ⚙️ **Per-user AI configuration** - Set your own Gemini API key and model
+- ⚙️ **Per-user AI configuration** - Set your own API keys for Gemini, OpenAI, or Anthropic
 - 🖥️ Modern Next.js dashboard with logs, user management & clean UI
 - 🔧 Express.js backend API for authentication, prompt routing, and agent control
 - 🛢️ Fast, serverless Postgres storage using Prisma ORM + NeonDB
@@ -21,7 +21,7 @@ Orbilt-CLI is a powerful command-line AI agent that brings advanced AI capabilit
 
 **Frontend:** Next.js, React, Tailwind CSS  
 **Backend:** Express.js, Node.js, Node.js Commander  
-**AI Engine:** Google Gemini, AI SDK  
+**AI Engine:** AI SDK (Google Gemini, OpenAI GPT, Anthropic Claude)  
 **Authentication:** Better Auth (Device Flow)  
 **Database:** Prisma ORM, NeonDB, PostgreSQL
 
@@ -93,9 +93,17 @@ BETTER_AUTH_URL=http://localhost:3005
 GITHUB_CLIENT_ID="your_github_client_id"
 GITHUB_CLIENT_SECRET="your_github_client_secret"
 
-# Default Gemini API Key (Optional - users can set their own)
+# Default Gemini AI Configuration (Optional - users can set their own)
 GOOGLE_GENERATIVE_AI_API_KEY="your_gemini_api_key"
 ORBITAI_MODEL=gemini-2.5-flash
+
+# OpenAI Configuration (Optional)
+OPENAI_API_KEY="your_openai_api_key"
+OPENAI_MODEL="gpt-4.1-mini"
+
+# Anthropic Configuration (Optional)
+ANTHROPIC_API_KEY="your_anthropic_api_key"
+ANTHROPIC_MODEL="claude-3-5-sonnet-latest"
 
 NODE_ENV=development
 ```
@@ -104,6 +112,8 @@ NODE_ENV=development
 - Database: See [DATABASE_SETUP.md](./DATABASE_SETUP.md)
 - GitHub OAuth: https://github.com/settings/developers
 - Gemini API: https://aistudio.google.com/apikey
+- OpenAI API: https://platform.openai.com/api-keys
+- Anthropic API: https://console.anthropic.com/settings/keys
 
 ## 🎯 CLI Commands
 
@@ -116,14 +126,15 @@ orbit whoami         # Show current user
 
 ### AI Configuration (New! ⭐)
 ```bash
-orbit config set     # Set your own Gemini API key and model
+orbit config set     # Set your own API key and default provider model
 orbit config view    # View your current AI configuration
 ```
 
 ### Chat
 ```bash
 orbit wakeup         # Start AI interaction
-                     # Choose: Chat, Tool Calling, or Agent Mode
+                     # Prompts you to select your AI Provider (Gemini/OpenAI/Anthropic)
+                     # Then choose: Chat, Tool Calling, or Agent Mode
 ```
 
 ## 🔧 Architecture Flow
@@ -167,7 +178,7 @@ orbit wakeup         # Start AI interaction
           │
           ▼
 ┌──────────────────────────┐
-│   Google Gemini AI       │
+│ AI Engine (Multi-Model)  │
 │                          │
 │ - Chat Completion        │
 │ - Tool Calling           │
@@ -233,14 +244,19 @@ orbit wakeup         # Start AI interaction
    ```bash
    orbit wakeup
    ```
-   Choose from:
+   First, choose your AI Provider:
+   - Google Gemini
+   - OpenAI GPT
+   - Anthropic Claude
+
+   Then, choose your mode:
    - **Chat** - Simple conversation with AI
    - **Tool Calling** - AI with Google search and code execution
    - **Agent Mode** - Advanced agentic behavior
 
 ### Per-User AI Configuration
 
-Each user can now configure their own Gemini API key and model:
+Each user can now configure their own API keys and choose their default AI provider:
 
 ```bash
 # Set your configuration

@@ -4,7 +4,7 @@ import { text, isCancel, cancel, intro, outro } from "@clack/prompts";
 import yoctoSpinner from "yocto-spinner";
 import { marked } from "marked";
 import { markedTerminal } from "marked-terminal";
-import { AIService } from "../ai/google-service.js";
+import { AIService } from "../ai/ai-service.js";
 import { ChatService } from "../../services/chat.services.js";
 import { getStoredToken } from "../commands/auth/login.js";
 import prisma from "../../lib/db.js";
@@ -33,7 +33,7 @@ const chatService = new ChatService();
 
 async function getUserFromToken() {
   const token = await getStoredToken();
-  
+
   if (!token?.access_token) {
     throw new Error("Not authenticated. Please run 'orbit login' first.");
   }
@@ -59,13 +59,13 @@ async function getUserFromToken() {
 
 async function initConversation(userId, conversationId = null, mode = "chat") {
   const spinner = yoctoSpinner({ text: "Loading conversation..." }).start();
-  
+
   const conversation = await chatService.getOrCreateConversation(
     userId,
     conversationId,
     mode
   );
-  
+
   spinner.success("Conversation loaded");
 
   const conversationInfo = boxen(
@@ -79,14 +79,14 @@ async function initConversation(userId, conversationId = null, mode = "chat") {
       titleAlignment: "center",
     }
   );
-  
+
   console.log(conversationInfo);
 
   if (conversation.messages?.length > 0) {
     console.log(chalk.yellow("📜 Previous messages:\n"));
     displayMessages(conversation.messages);
   }
-  
+
   return conversation;
 }
 
@@ -122,17 +122,17 @@ async function saveMessage(conversationId, role, content) {
 }
 
 async function getAIResponse(conversationId) {
-  const spinner = yoctoSpinner({ 
-    text: "AI is thinking...", 
-    color: "cyan" 
+  const spinner = yoctoSpinner({
+    text: "AI is thinking...",
+    color: "cyan"
   }).start();
 
   const dbMessages = await chatService.getMessages(conversationId);
   const aiMessages = chatService.formatMessagesForAI(dbMessages);
-  
+
   let fullResponse = "";
   let isFirstChunk = true;
-  
+
   try {
     const result = await aiService.sendMessage(aiMessages, (chunk) => {
       if (isFirstChunk) {
@@ -145,13 +145,13 @@ async function getAIResponse(conversationId) {
       }
       fullResponse += chunk;
     });
-    
+
     console.log("\n");
     const renderedMarkdown = marked.parse(fullResponse);
     console.log(renderedMarkdown);
     console.log(chalk.gray("─".repeat(60)));
     console.log("\n");
-    
+
     return result.content;
   } catch (error) {
     spinner.error("Failed to get AI response");
@@ -177,7 +177,7 @@ async function chatLoop(conversation) {
       dimBorder: true,
     }
   );
-  
+
   console.log(helpBox);
 
   while (true) {
@@ -234,7 +234,7 @@ export async function startChat(mode = "chat", conversationId = null) {
     const user = await getUserFromToken();
     const conversation = await initConversation(user.id, conversationId, mode);
     await chatLoop(conversation);
-    
+
     outro(chalk.green("✨ Thanks for chatting!"));
   } catch (error) {
     const errorBox = boxen(chalk.red(`❌ Error: ${error.message}`), {
