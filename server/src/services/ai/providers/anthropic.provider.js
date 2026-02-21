@@ -1,4 +1,4 @@
-import { anthropic } from "@ai-sdk/anthropic";
+import { createAnthropic } from "@ai-sdk/anthropic";
 import { streamText, generateObject } from "ai";
 import { config } from "../../../config/anthropic.config.js";
 import chalk from "chalk";
@@ -14,7 +14,8 @@ export class AnthropicProvider extends AIProvider {
             throw new Error("ANTHROPIC_API_KEY is not set");
         }
 
-        this.model = anthropic(this.modelName, { apiKey: this.apiKey });
+        const anthropicProvider = createAnthropic({ apiKey: this.apiKey });
+        this.model = anthropicProvider(this.modelName);
     }
 
     getProviderName() {

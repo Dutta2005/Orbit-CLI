@@ -188,6 +188,12 @@ export async function startAgentChat(user, conversationId = null) {
     }
 
     const userConfig = user.aiConfig || {};
+    // If user selects a different provider than saved, clear apiKey/model
+    // so the provider uses its own defaults
+    if (userConfig.provider && userConfig.provider !== providerChoice) {
+      userConfig.apiKey = undefined;
+      userConfig.model = undefined;
+    }
     userConfig.provider = providerChoice;
 
     const aiService = new AIService(userConfig, user.id);

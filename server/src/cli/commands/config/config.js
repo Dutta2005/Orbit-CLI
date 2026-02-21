@@ -30,9 +30,9 @@ const OPENAI_MODELS = [
 ];
 
 const ANTHROPIC_MODELS = [
-  { value: "claude-3-5-sonnet-latest", label: "Claude 3.5 Sonnet (Recommended)" },
-  { value: "claude-3-5-haiku-latest", label: "Claude 3.5 Haiku" },
-  { value: "claude-3-opus-latest", label: "Claude 3 Opus" },
+  { value: "claude-sonnet-4-6", label: "Claude Sonnet 4.6 (Recommended)" },
+  { value: "claude-opus-4-6", label: "Claude Opus 4.6" },
+  { value: "claude-haiku-4-5", label: "Claude Haiku 4.5" },
 ];
 
 async function getUserFromToken() {

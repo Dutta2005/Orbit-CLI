@@ -1,4 +1,4 @@
-import { openai } from "@ai-sdk/openai";
+import { createOpenAI } from "@ai-sdk/openai";
 import { streamText, generateObject } from "ai";
 import { config } from "../../../config/openai.config.js";
 import chalk from "chalk";
@@ -14,7 +14,8 @@ export class OpenAIProvider extends AIProvider {
             throw new Error("OPENAI_API_KEY is not set");
         }
 
-        this.model = openai(this.modelName, { apiKey: this.apiKey });
+        const openaiProvider = createOpenAI({ apiKey: this.apiKey });
+        this.model = openaiProvider(this.modelName);
     }
 
     getProviderName() {
