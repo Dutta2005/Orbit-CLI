@@ -1,7 +1,6 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import chalk from 'chalk';
-import { generateObject } from 'ai';
 import { z } from 'zod';
 
 
@@ -80,10 +79,9 @@ export async function generateApplication(description, aiService, cwd = process.
     printSystem(chalk.magenta('🤖 Generating structured output...\n'));
     
 
-    const result = await generateObject({
-      model: aiService.model,
-      schema: ApplicationSchema,
-      prompt: `Create a complete, production-ready application for: ${description}
+    const application = await aiService.generateStructured(
+      ApplicationSchema,
+      `Create a complete, production-ready application for: ${description}
 
 CRITICAL REQUIREMENTS:
 1. Generate ALL files needed for the application to run
@@ -101,10 +99,8 @@ Provide:
 - A meaningful kebab-case folder name
 - All necessary files with complete content
 - Setup commands (for example: cd folder, npm install, npm run dev OR just open index.html)
-- Make it visually appealing and functional`,
-    });
-    
-    const application = result.object;
+- Make it visually appealing and functional`
+  );
     
     printSystem(chalk.green(`\n✅ Generated: ${application.folderName}\n`));
     printSystem(chalk.gray(`Description: ${application.description}\n`));

@@ -398,6 +398,29 @@ export async function startToolChat(user, conversationId = null) {
 
     await selectTools();
 
+    // if (providerChoice === "google") {
+    //   await selectTools();
+    // } else {
+    //   resetTools();
+    //   const providerName = providerChoice === "openai" ? "OpenAI" : "Anthropic";
+    //   console.log(
+    //     boxen(
+    //       chalk.yellow(
+    //         `⚠️  Tool calling is currently configured with Google-only built-in tools.\n` +
+    //         `${providerName} will run in chat-only mode for this session.`
+    //       ),
+    //       {
+    //         padding: 1,
+    //         margin: { top: 1, bottom: 1 },
+    //         borderStyle: "round",
+    //         borderColor: "yellow",
+    //         title: "Provider Compatibility",
+    //         titleAlignment: "center",
+    //       }
+    //     )
+    //   );
+    // }
+
     const conversation = await initConversation(user.id, conversationId, "tool");
     await chatLoop(conversation, aiService);
 
