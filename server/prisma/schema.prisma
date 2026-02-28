@@ -20,7 +20,6 @@ model User {
   email         String
   emailVerified Boolean   @default(false)
   image         String?
-  role          String    @default("user")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @default(now()) @updatedAt
   sessions      Session[]
