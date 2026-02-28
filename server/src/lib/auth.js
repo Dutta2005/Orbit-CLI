@@ -14,19 +14,25 @@ export const auth = betterAuth({
     deviceAuthorization({
       expiresIn: "30m",
       interval: "5s",
-      
+
     }),
   ],
   socialProviders: {
     github: {
       clientId: process.env.GITHUB_CLIENT_ID,
       clientSecret: process.env.GITHUB_CLIENT_SECRET,
-      
     },
-  
+  },
+  user: {
+    additionalFields: {
+      role: {
+        type: "string",
+        defaultValue: "user",
+      },
+    },
   },
 
-    logger: {
-        level: "debug"
-    }
+  logger: {
+    level: "debug"
+  }
 });
