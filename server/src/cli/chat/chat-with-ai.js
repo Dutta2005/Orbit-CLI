@@ -36,7 +36,7 @@ const aiConfigService = new AiConfigService();
 
 
 async function initConversation(userId, conversationId = null, mode = "chat") {
-  const spinner = yoctoSpinner({ 
+  const spinner = yoctoSpinner({
     text: "🤖 Thinking...",
     color: "cyan"
   }).start();
@@ -146,9 +146,16 @@ async function getAIResponse(conversationId, aiService) {
         padding: 1, margin: 1, borderStyle: "round", borderColor: "red"
       }));
     }
-    if (!fullResponse && error.message.includes("stream")) {
+    if (!fullResponse && error.message?.toLowerCase().includes("stream")) {
       console.log(chalk.yellow("Streaming failed, retrying without streaming..."));
       const result = await aiService.getMessage(aiMessages);
+      const header = chalk.green.bold("🤖 Assistant:");
+      console.log("\n" + header);
+      console.log(chalk.gray("─".repeat(60)));
+      process.stdout.write(result);
+      console.log("\n");
+      console.log(chalk.gray("─".repeat(60)));
+      console.log("\n");
       return result;
     }
     throw error;

@@ -24,7 +24,7 @@ export class GoogleProvider extends AIProvider {
 
     async sendMessage(messages, onChunk, tools = undefined, onToolCall = null) {
         try {
-            if(!Array.isArray(messages) || messages.length === 0) {
+            if (!Array.isArray(messages) || messages.length === 0) {
                 throw new Error("Messages must be a non-empty array");
             }
             const streamConfig = {
@@ -84,7 +84,10 @@ export class GoogleProvider extends AIProvider {
             };
         } catch (error) {
             console.error(chalk.red("[ERROR] GoogleProvider failed:"), error.message);
-            throw new Error(`GoogleProvider error: ${error.message}`);
+            const wrapped = new Error(`GoogleProvider error: ${error?.message ?? "Unknown error"}`);
+            wrapped.statusCode = error?.statusCode;
+            wrapped.cause = error;
+            throw wrapped;
         }
     }
 

@@ -1,10 +1,10 @@
 
-import {auth} from "../lib/auth.js";
+import { auth } from "../lib/auth.js";
 import prisma from "../lib/db.js";
 
 export class ChatService {
-  async createConversation( userId , mode = "chat", title = null) {
-  
+  async createConversation(userId, mode = "chat", title = null) {
+
     return await prisma.conversation.create({
       data: {
         userId,
@@ -35,12 +35,10 @@ export class ChatService {
   }
 
   async addMessage(conversationId, role, content) {
-    let contentStr = typeof content === "string" 
-      ? content 
+    const serialized = typeof content === "string"
+      ? content
       : JSON.stringify(content);
-    contentStr = contentStr
-      .replace(/\b(true|false)\b/g, "")
-      .trim();
+    const contentStr = (serialized ?? String(content ?? "")).trim();
 
     return await prisma.message.create({
       data: {
