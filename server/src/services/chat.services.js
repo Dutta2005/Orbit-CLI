@@ -38,7 +38,7 @@ export class ChatService {
     const serialized = typeof content === "string"
       ? content
       : JSON.stringify(content);
-    const contentStr = (serialized ?? String(content ?? "")).trim();
+    const contentStr = (serialized ?? String(content ?? ""));
 
     return await prisma.message.create({
       data: {

@@ -75,7 +75,7 @@ export class GoogleProvider extends AIProvider {
             }
 
             return {
-                content: fullResponse.trim(),
+                content: fullResponse,
                 finishReason: fullResult.finishReason,
                 usage: fullResult.usage,
                 toolCalls,
