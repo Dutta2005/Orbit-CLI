@@ -36,7 +36,10 @@ const aiConfigService = new AiConfigService();
 
 
 async function initConversation(userId, conversationId = null, mode = "chat") {
-  const spinner = yoctoSpinner({ text: "Loading conversation..." }).start();
+  const spinner = yoctoSpinner({ 
+    text: "🤖 Thinking...",
+    color: "cyan"
+  }).start();
 
   const conversation = await chatService.getOrCreateConversation(
     userId,
@@ -114,23 +117,24 @@ async function getAIResponse(conversationId, aiService) {
   try {
     const result = await aiService.sendMessage(aiMessages, (chunk) => {
       if (isFirstChunk) {
-        spinner.stop();
-        console.log("\n");
+        spinner.success("Response received");
+        process.stdout.write("\n");
         const header = chalk.green.bold("🤖 Assistant:");
         console.log(header);
         console.log(chalk.gray("─".repeat(60)));
         isFirstChunk = false;
       }
+      process.stdout.write(chunk);
       fullResponse += chunk;
     });
 
     console.log("\n");
-    const renderedMarkdown = marked.parse(fullResponse);
-    console.log(renderedMarkdown);
+    // const renderedMarkdown = marked.parse(fullResponse);
+    // console.log(renderedMarkdown);
     console.log(chalk.gray("─".repeat(60)));
     console.log("\n");
 
-    return result.content;
+    return fullResponse;
   } catch (error) {
     spinner.error("Failed to get AI response");
     if (error.statusCode === 401 || error.statusCode === 403 || error.message?.includes("API_KEY") || error.message?.includes("key")) {
@@ -141,6 +145,11 @@ async function getAIResponse(conversationId, aiService) {
       console.log(boxen(chalk.red(`❌ AI Error: ${error.message}`), {
         padding: 1, margin: 1, borderStyle: "round", borderColor: "red"
       }));
+    }
+    if (!fullResponse && error.message.includes("stream")) {
+      console.log(chalk.yellow("Streaming failed, retrying without streaming..."));
+      const result = await aiService.getMessage(aiMessages);
+      return result;
     }
     throw error;
   }

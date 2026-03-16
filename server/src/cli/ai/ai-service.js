@@ -11,7 +11,9 @@ export class AIService {
     async sendMessage(messages, onChunk, tools = undefined, onToolCall = null) {
         const executeCall = async () => {
             try {
-                return await this.provider.sendMessage(messages, onChunk, tools, onToolCall);
+                return await this.provider.sendMessage(messages, 
+                    onChunk,
+                     tools, onToolCall);
             } catch (error) {
                 if (!this.userId) {
                     if (error.statusCode === 401 || error.statusCode === 403 || error.message.includes("API_KEY") || error.message.includes("key")) {

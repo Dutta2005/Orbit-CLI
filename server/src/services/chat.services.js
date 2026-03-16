@@ -35,9 +35,12 @@ export class ChatService {
   }
 
   async addMessage(conversationId, role, content) {
-    const contentStr = typeof content === "string" 
+    let contentStr = typeof content === "string" 
       ? content 
       : JSON.stringify(content);
+    contentStr = contentStr
+      .replace(/\b(true|false)\b/g, "")
+      .trim();
 
     return await prisma.message.create({
       data: {
