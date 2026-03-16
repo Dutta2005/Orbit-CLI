@@ -24,6 +24,9 @@ export class GoogleProvider extends AIProvider {
 
     async sendMessage(messages, onChunk, tools = undefined, onToolCall = null) {
         try {
+            if (!Array.isArray(messages) || messages.length === 0) {
+                throw new Error("Messages must be a non-empty array");
+            }
             const streamConfig = {
                 model: this.model,
                 messages: messages,
@@ -42,9 +45,11 @@ export class GoogleProvider extends AIProvider {
 
             let fullResponse = "";
             for await (const chunk of result.textStream) {
+                if (!chunk) continue;
                 fullResponse += chunk;
                 if (onChunk) {
                     onChunk(chunk);
+                    process.stdout.write("");
                 }
             }
 
@@ -78,7 +83,11 @@ export class GoogleProvider extends AIProvider {
                 steps: fullResult.steps,
             };
         } catch (error) {
-            throw error;
+            console.error(chalk.red("[ERROR] GoogleProvider failed:"), error.message);
+            const wrapped = new Error(`GoogleProvider error: ${error?.message ?? "Unknown error"}`);
+            wrapped.statusCode = error?.statusCode;
+            wrapped.cause = error;
+            throw wrapped;
         }
     }
 

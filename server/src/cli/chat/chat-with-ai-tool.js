@@ -201,13 +201,14 @@ async function getAIResponse(conversationId, aiService) {
       aiMessages,
       (chunk) => {
         if (isFirstChunk) {
-          spinner.stop();
-          console.log("\n");
+          spinner.success("Response received");
+          process.stdout.write("\n");
           const header = chalk.green.bold("🤖 Assistant:");
           console.log(header);
           console.log(chalk.gray("─".repeat(60)));
           isFirstChunk = false;
         }
+        process.stdout.write(chunk);
         fullResponse += chunk;
       },
       tools,
@@ -250,14 +251,35 @@ async function getAIResponse(conversationId, aiService) {
     }
 
     console.log("\n");
-    const renderedMarkdown = marked.parse(fullResponse);
-    console.log(renderedMarkdown);
+    // const renderedMarkdown = marked.parse(fullResponse);
+    // console.log(renderedMarkdown);
     console.log(chalk.gray("─".repeat(60)));
     console.log("\n");
 
-    return result.content;
+    return fullResponse;
   } catch (error) {
     spinner.error("Failed to get AI response");
+    
+    if (!fullResponse && error.message?.toLowerCase().includes("stream")) {
+      console.log(chalk.yellow("Streaming failed, retrying without streaming..."));
+      try {
+        const result = await aiService.getMessage(aiMessages, tools);
+        const header = chalk.green.bold("🤖 Assistant:");
+        console.log("\n" + header);
+        console.log(chalk.gray("─".repeat(60)));
+        process.stdout.write(result);
+        console.log("\n");
+        console.log(chalk.gray("─".repeat(60)));
+        console.log("\n");
+        return result;
+      } catch (fallbackError) {
+        console.log(boxen(chalk.red(`❌ AI Fallback Error: ${fallbackError.message}`), {
+          padding: 1, margin: 1, borderStyle: "round", borderColor: "red"
+        }));
+        return "Sorry, I encountered an error while processing that request.";
+      }
+    }
+
     if (error.statusCode === 401 || error.statusCode === 403 || error.message?.includes("API_KEY") || error.message?.includes("key")) {
       console.log(boxen(chalk.red("❌ Authentication Error: Invalid or missing API Key.\nPlease check your configuration using 'orbit config set'."), {
         padding: 1, margin: 1, borderStyle: "round", borderColor: "red"
@@ -267,6 +289,7 @@ async function getAIResponse(conversationId, aiService) {
         padding: 1, margin: 1, borderStyle: "round", borderColor: "red"
       }));
     }
+    
     throw error;
   }
 }
