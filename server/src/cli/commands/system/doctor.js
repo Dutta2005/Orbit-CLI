@@ -40,12 +40,10 @@ const checkDbConnection = async () => {
 const checkBackend = async () => {
   const url = process.env.BETTER_AUTH_URL || `http://localhost:${process.env.PORT || 3005}`;
   try {
-    // Simply fetch the root or a health endpoint to verify the server answers HTTP requests.
-    await fetch(url).catch(err => {
-      // If it throws TypeError for failed fetch, re-throw it to catch block below.
-      // If it responds with 404, it's alive!
-      if (err instanceof TypeError && err.cause) throw err;
-    });
+    const response = await fetch(url);
+    if (!response.ok && response.status !== 404) {
+      throw new Error(`Server responded with status ${response.status}`);
+    }
     console.log(`  ${chalk.green('✔')} Backend server: Reachable at ${url}`);
     return true;
   } catch (error) {
