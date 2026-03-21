@@ -11,8 +11,11 @@ import { login, logout, whoami } from "./commands/auth/login.js";
 import { config } from "./commands/config/config.js";
 import { wakeUp } from "./commands/ai/wakeUp.js";
 import { history } from "./commands/history/history.js";
+import { doctor } from "./commands/system/doctor.js";
 
-validateEnv();
+if (!process.argv.includes("doctor")) {
+  validateEnv();
+}
 
 async function main() {
   console.log(
@@ -53,6 +56,7 @@ ${chalk.bold.cyan('Documentation:')}
   program.addCommand(whoami);
   program.addCommand(config);
   program.addCommand(history);
+  program.addCommand(doctor);
 
   program.action(() => {
     program.help();
