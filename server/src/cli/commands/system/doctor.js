@@ -71,19 +71,19 @@ const checkAuth = async () => {
 
   try {
     const user = await prisma.user.findFirst({
-      where: { sessions: { some: { token: token.access_token } } }
+      where: { sessions: { some: { token: token.access_token, expiresAt: { gt: new Date() }, } } }
     });
 
     if (user) {
       console.log(`  ${chalk.green('✔')} Authentication: Logged in as ${user.email}`);
       return { authenticated: true, userId: user.id };
     } else {
-       console.log(`  ${chalk.red('❌')} Authentication: Invalid token or user not found`);
-       return { authenticated: false, userId: null };
+      console.log(`  ${chalk.red('❌')} Authentication: Invalid token or user not found`);
+      return { authenticated: false, userId: null };
     }
   } catch (err) {
-     console.log(`  ${chalk.yellow('⚠')} Authentication: Could not verify (Database unreachable)`);
-     return { authenticated: false, userId: null };
+    console.log(`  ${chalk.yellow('⚠')} Authentication: Could not verify (Database unreachable)`);
+    return { authenticated: false, userId: null };
   }
 };
 
@@ -94,12 +94,12 @@ const checkAiConfig = async (userId) => {
     let model = process.env.ORBITAI_MODEL || "gemini-2.5-flash";
 
     if (userId) {
-       const user = await prisma.user.findUnique({ where: { id: userId }, include: { aiConfig: true } });
-       if (user?.aiConfig) {
-         apiKey = user.aiConfig.apiKey;
-         provider = user.aiConfig.provider;
-         model = user.aiConfig.model;
-       }
+      const user = await prisma.user.findUnique({ where: { id: userId }, include: { aiConfig: true } });
+      if (user?.aiConfig) {
+        apiKey = user.aiConfig.apiKey;
+        provider = user.aiConfig.provider;
+        model = user.aiConfig.model;
+      }
     }
 
     if (!apiKey) {
@@ -121,36 +121,36 @@ const checkAiConfig = async (userId) => {
       return false;
     }
   } catch (err) {
-      console.log(`  ${chalk.yellow('⚠')} AI Configuration: Could not validate (${err.message})`);
-      return false;
+    console.log(`  ${chalk.yellow('⚠')} AI Configuration: Could not validate (${err.message})`);
+    return false;
   }
 };
 
 const doctorAction = async () => {
-   console.log(chalk.bold.cyan("\n🩺 Orbit CLI Diagnostics\n"));
-   let hasErrors = false;
+  console.log(chalk.bold.cyan("\n🩺 Orbit CLI Diagnostics\n"));
+  let hasErrors = false;
 
-   const envOk = checkEnvVars();
-   if (!envOk) hasErrors = true;
+  const envOk = checkEnvVars();
+  if (!envOk) hasErrors = true;
 
-   const dbOk = await checkDbConnection();
-   if (!dbOk) hasErrors = true;
+  const dbOk = await checkDbConnection();
+  if (!dbOk) hasErrors = true;
 
-   const backendOk = await checkBackend();
-   if (!backendOk) hasErrors = true;
+  const backendOk = await checkBackend();
+  if (!backendOk) hasErrors = true;
 
-   const auth = await checkAuth();
-   if (!auth.authenticated) hasErrors = true;
+  const auth = await checkAuth();
+  if (!auth.authenticated) hasErrors = true;
 
-   const aiOk = await checkAiConfig(auth.userId);
-   if (!aiOk) hasErrors = true;
+  const aiOk = await checkAiConfig(auth.userId);
+  if (!aiOk) hasErrors = true;
 
-   console.log("\n" + chalk.gray("─".repeat(40)));
-   if (hasErrors) {
-     console.log(chalk.red("\n❌ Diagnostics completed with issues. Please apply the fixes above.\n"));
-   } else {
-     console.log(chalk.green("\n✅ All systems operational! The CLI is fully configured.\n"));
-   }
+  console.log("\n" + chalk.gray("─".repeat(40)));
+  if (hasErrors) {
+    console.log(chalk.yellowBright("\n⚠️ Diagnostics completed with issues. Please apply the fixes above.\n"));
+  } else {
+    console.log(chalk.greenBright("\n✅ All systems operational! The CLI is fully configured.\n"));
+  }
 };
 
 export const doctor = new Command("doctor")
