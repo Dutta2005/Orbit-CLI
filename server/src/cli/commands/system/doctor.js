@@ -94,11 +94,11 @@ const checkAiConfig = async (userId) => {
     let model = process.env.ORBITAI_MODEL || "gemini-2.5-flash";
 
     if (userId) {
-      const user = await prisma.user.findUnique({ where: { id: userId }, include: { aiConfig: true } });
-      if (user?.aiConfig) {
-        apiKey = user.aiConfig.apiKey;
-        provider = user.aiConfig.provider;
-        model = user.aiConfig.model;
+      const userConfig = await aiConfigService.getConfig(userId);
+      if (userConfig) {
+        apiKey = userConfig.apiKey;
+        provider = userConfig.provider;
+        model = userConfig.model;
       }
     }
 

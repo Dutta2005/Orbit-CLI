@@ -19,6 +19,7 @@ const envSchema = z.object({
   BETTER_AUTH_URL: z.string().url("BETTER_AUTH_URL must be a valid URL"),
   GITHUB_CLIENT_ID: z.string().min(1, "GITHUB_CLIENT_ID is required"),
   GITHUB_CLIENT_SECRET: z.string().min(1, "GITHUB_CLIENT_SECRET is required"),
+  AI_CONFIG_ENCRYPTION_SECRET: z.string().min(32, "AI_CONFIG_ENCRYPTION_SECRET must be at least 32 characters").optional(),
   GOOGLE_GENERATIVE_AI_API_KEY: z.string().optional(),
   ORBITAI_MODEL: z.string().default("gemini-2.5-flash"),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
@@ -38,6 +39,12 @@ try {
   console.log(chalk.gray(`  GITHUB_CLIENT_ID: ${env.GITHUB_CLIENT_ID.substring(0, 10)}...`));
   console.log(chalk.gray(`  ORBITAI_MODEL: ${env.ORBITAI_MODEL}`));
   console.log(chalk.gray(`  NODE_ENV: ${env.NODE_ENV}`));
+
+  if (env.AI_CONFIG_ENCRYPTION_SECRET) {
+    console.log(chalk.gray(`  AI_CONFIG_ENCRYPTION_SECRET: Set ✓`));
+  } else {
+    console.log(chalk.yellow(`  AI_CONFIG_ENCRYPTION_SECRET: Not set (falls back to BETTER_AUTH_SECRET)`));
+  }
   
   if (env.GOOGLE_GENERATIVE_AI_API_KEY) {
     console.log(chalk.gray(`  GOOGLE_GENERATIVE_AI_API_KEY: Set ✓`));

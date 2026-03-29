@@ -26,7 +26,7 @@ model User {
   accounts      Account[]
 
   conversation Conversation[]
-  aiConfig     AiConfig?
+  aiConfig     AiConfig[]
   commandLogs  CommandLog[]
   apiCallLogs  ApiCallLog[]
 
@@ -121,7 +121,7 @@ model Message {
 
 model AiConfig {
   id        String   @id @default(cuid())
-  userId    String   @unique
+  userId    String
   provider  String   @default("google")
   apiKey    String
   model     String   @default("gemini-2.5-flash")
@@ -130,6 +130,8 @@ model AiConfig {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, provider])
+  @@index([userId])
   @@map("aiConfig")
 }
 

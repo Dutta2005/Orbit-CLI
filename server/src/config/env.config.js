@@ -8,6 +8,7 @@ export const envSchema = z.object({
   BETTER_AUTH_URL: z.string().url("BETTER_AUTH_URL must be a valid URL"),
   GITHUB_CLIENT_ID: z.string().min(1, "GITHUB_CLIENT_ID is required"),
   GITHUB_CLIENT_SECRET: z.string().min(1, "GITHUB_CLIENT_SECRET is required"),
+  AI_CONFIG_ENCRYPTION_SECRET: z.string().min(32, "AI_CONFIG_ENCRYPTION_SECRET must be at least 32 characters").optional(),
   GOOGLE_GENERATIVE_AI_API_KEY: z.string().optional(),
   ORBITAI_MODEL: z.string().default("gemini-2.5-flash"),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),

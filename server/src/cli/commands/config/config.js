@@ -169,8 +169,9 @@ const configSetAction = async () => {
 const configViewAction = async () => {
   try {
     const user = await getUserFromToken();
+    const aiConfigs = await aiConfigService.getConfigs(user.id);
 
-    if (!user.aiConfig) {
+    if (!aiConfigs || aiConfigs.length === 0) {
       console.log(
         boxen(
           `${chalk.yellow("⚠️  No custom AI configuration found")}\n\n${chalk.gray("Using server defaults")}\n${chalk.gray("Run 'orbit config set' to configure your own API key")}`,
@@ -184,9 +185,16 @@ const configViewAction = async () => {
       return;
     }
 
+    const configsText = aiConfigs
+      .map(
+        (cfg) =>
+          `${chalk.gray("Provider:")} ${chalk.white(cfg.provider)}\n${chalk.gray("Model:")} ${chalk.white(cfg.model)}\n${chalk.gray("API Key:")} ${chalk.white(cfg.apiKey.slice(0, 10) + "...")}\n${chalk.gray("Last Updated:")} ${chalk.white(new Date(cfg.updatedAt).toLocaleString())}`
+      )
+      .join("\n\n");
+
     console.log(
       boxen(
-        `${chalk.bold.cyan("⚙️  Your AI Configuration")}\n\n${chalk.gray("Provider:")} ${chalk.white(user.aiConfig.provider)}\n${chalk.gray("Model:")} ${chalk.white(user.aiConfig.model)}\n${chalk.gray("API Key:")} ${chalk.white(user.aiConfig.apiKey.slice(0, 10) + "...")}\n${chalk.gray("Last Updated:")} ${chalk.white(new Date(user.aiConfig.updatedAt).toLocaleString())}`,
+        `${chalk.bold.cyan("⚙️  Your AI Configuration(s)")}\n\n${configsText}`,
         {
           padding: 1,
           borderStyle: "round",

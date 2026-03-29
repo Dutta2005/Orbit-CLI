@@ -263,7 +263,10 @@ export async function startChat(user, mode = "chat", conversationId = null) {
       process.exit(0);
     }
 
-    const userConfig = user.aiConfig || {};
+    const storedConfig = await aiConfigService.getConfig(user.id, providerChoice);
+    const userConfig = storedConfig
+      ? { provider: storedConfig.provider, apiKey: storedConfig.apiKey, model: storedConfig.model }
+      : {};
     // If user selects a different provider than saved, clear apiKey/model
     // so the provider uses its own defaults
     if (userConfig.provider && userConfig.provider !== providerChoice) {
